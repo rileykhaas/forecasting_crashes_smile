@@ -1,0 +1,27 @@
+[project]
+name = "forecasting_crashes_smile"
+description = "Replication and extension of Martin & Shi (2025), "Forecasting Crashes with a Smile""
+maintainer = "Riley Haas and Marija Jovicic"
+contributors = ["Riley Haas and Marija Jovicic"]
+os_compatibility = ["Windows", "Linux", "macOS"]
+build = """
+module load anaconda3/3.11.4 TeXLive/2023
+doit
+"""
+
+[notebooks]
+
+
+[notebooks.01_example_notebook_interactive]
+name = "Example Notebook Interactive"
+description = "Example notebook for demonstrating how to construct a Chartbook notebook."
+path = "_output/01_example_notebook_interactive.ipynb"
+
+
+
+
+[dataframes]
+
+
+[charts]
+
