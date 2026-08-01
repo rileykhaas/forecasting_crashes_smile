@@ -5,6 +5,144 @@ forecasting_crashes_smile
 
 Replication and extension of Martin & Shi (2025), "Forecasting Crashes with a Smile"
 
+## Team & Task Division
+
+The pipeline breaks into small, individually-claimable tasks. Each task has a
+defined input and output, so they chain cleanly and can be signed up for one at
+a time. Tick the box and add your initials when you take a task.
+
+### Agree before anyone writes code
+
+### Agreed constants and data conventions
+
+Fixed parameters (from Martin & Shi 2025):
+- Risk aversion: gamma = 2 (calibrated on market returns, Appendix C)
+- Forecasting horizons: tau = 1, 3, 6, 12 months
+- Crash thresholds: q = 0.70, 0.80, 0.90  (GROSS return levels, i.e. below 1;
+  q = 0.80 = "down 20%" is the workhorse). Note: a rally extension, if added,
+  would use q = 1.10, 1.20, 1.30 instead.
+- Index secid: 108105 (S&P 500). Individual names: S&P 500 constituents.
+- Frequency: last trading day of each month. Paper sample: Jan 1996 - Dec 2022
+  (our extension pushes END_DATE to ~Aug 2025).
+
+Join keys for the analysis-facing tables:
+    date, secid, horizon_months, threshold_q
+
+### Table schemas
+
+**clean_surface.parquet**  (Slice 1) — one row per date x secid x maturity x strike-grid point
+- date              last trading day of month (datetime)
+- secid             int (108105 = index)
+- days_to_maturity  int  (option maturity in calendar days; slices chosen to match
+                          the 1/3/6/12-month horizons)
+- moneyness         float  (K / S, strike over spot)
+- implied_vol       float  (from OptionMetrics vol surface, after filtering +
+                            flat extrapolation)
+- spot_price        float  (S; constant within date x secid — carried here for convenience)
+
+  Filtering (Appendix D): CRSP spot must exist; strike > 0; OptionMetrics
+  dispersion in (0, 0.05); more than 10 distinct strikes per firm-month-maturity.
+  Interpolation linear within observed strikes; flat extrapolation outside.
+
+**rates.parquet**  (Slice 1) — one row per date x maturity  (index-level, not per-secid)
+- date              datetime
+- days_to_maturity  int
+- zero_rate         float  (from OptionMetrics zero-coupon yield curve, linearly
+                            interpolated across maturities)
+
+**realized_returns.parquet**  (Slice 2) — one row per date x secid x horizon
+                                (threshold-INDEPENDENT: stores the return, not the flag)
+- date                   formation date = last trading day of month t
+- secid                  int
+- horizon_months         int in {1, 3, 6, 12}
+- realized_gross_return  float  (R_{i, t -> t+tau}; GROSS, so 0.80 = down 20%;
+                                 CRSP return with delisting returns integrated)
+
+**results.parquet**  (Slice 3 / task A5) — one row per date x secid x horizon x threshold
+- date                   datetime
+- secid                  int
+- horizon_months         int in {1, 3, 6, 12}
+- threshold_q            float in {0.70, 0.80, 0.90}
+- bound_lower            float  (P^L)
+- prob_riskneutral       float  (P^*, the risk-neutral probability)
+- bound_upper            float  (P^U)
+- realized_gross_return  float  (joined from realized_returns for convenience)
+- realized_flag          int    (= 1 if realized_gross_return <= threshold_q, else 0)
+
+Invariant that a unit test should enforce: bound_lower <= prob_riskneutral <= bound_upper.
+
+---
+
+### Slice 1 — OptionMetrics surface
+
+Pure OptionMetrics. No CRSP, no link table. Can start immediately.
+
+- [ ] **S1a** — Pull IvyDB volatility surface (`vsurfd{year}`), zero curve (`zerocd`), secid lookups (`securd`/`secnmd`)  *(owner: __)*
+- [ ] **S1b** — Filter surface using Martin & Shi's criteria (moneyness/maturity windows); flat-extrapolate beyond observed strikes  *(owner: __)*
+- [ ] **S1c** — Write `clean_surface.parquet` + `rates.parquet`  *(owner: __)*
+- [ ] **S1d** — Unit tests: cleaned-surface shape/integrity  *(owner: __)*
+
+### Slice 2 — CRSP + realized returns
+
+Independent of Slice 1; the link table lives here.
+
+- [ ] **S2a** — Pull CRSP monthly v2 (adjust template's `pull_CRSP_stock.py`; delisting returns auto-integrate)  *(owner: __)*
+- [ ] **S2b** — Pull S&P 500 constituents (`crsp.msp500list`) + CRSP–OptionMetrics link table (`wrdsapps_link_crsp_optionm`)  *(owner: __)*
+- [ ] **S2c** — Build realized-returns table (apply the link, `secid ↔ permno`) → write `realized_returns.parquet`  *(owner: __)*
+- [ ] **S2d** — Unit tests: the realized-returns join  *(owner: __)*
+
+---
+
+### Analysis tasks (small standalone units; chain A1 → A5)
+
+Each reads a defined input and returns/writes a defined output.
+
+- [ ] **A1** — Risk-neutral CDF (Breeden–Litzenberger). In: `clean_surface` + `rates`. Out: `surface → risk-neutral CDF` per (date, secid, horizon). Test: CDF monotonic, in [0,1].  *(owner: __)*
+- [ ] **A2** — Risk-neutral crash probability. In: A1's CDF. Out: `prob_riskneutral` (integrate CDF below each `threshold`). Test: hand-checked value on one synthetic CDF.  *(owner: __)*
+- [ ] **A3** — Fear correction (R_m², γ=2). In: A2 + market return. Out: corrected probability weighting. Test: correction moves mass *out* of the crash tail (prob drops vs. A2).  *(owner: __)*
+- [ ] **A4** — Copula bounds. In: corrected probabilities. Out: `bound_lower`, `prob_star`, `bound_upper` (Fréchet–Hoeffding). Test: `bound_lower ≤ prob_star ≤ bound_upper` always.  *(owner: __)*
+- [ ] **A5** — Pipeline orchestration → results table. In: A1–A4 wired over all dates/secids. Out: `results.parquet`. Test: schema + no NaNs in required columns.  *(owner: __)*
+
+### Exhibit tasks (each is one table or one figure; independent, claim in any order)
+
+All read `results.parquet` (+ `realized_returns.parquet` where noted).
+
+- [ ] **E1** — Table 1: summary statistics *(replication)*  *(owner: __)*
+- [ ] **E2** — Table 2: calibration regressions *(replication; slopes ≈ 1 / 0.7 / 0.5; needs `realized_returns`)*  *(owner: __)*
+- [ ] **E3** — Figure 1 *(replication)*  *(owner: __)*
+- [ ] **E4** — Figure 2 *(replication)*  *(owner: __)*
+- [ ] **E5** — Own summary table *(20-pt deliverable; describes cleaned data; motivating caption)*  *(owner: __)*
+- [ ] **E6** — Own figure *(20-pt deliverable; motivating caption)*  *(owner: __)*
+- [ ] **E7** — LaTeX report assembly (pulls E1–E6 into the single document)  *(owner: __)*
+
+### Packaging & infrastructure (small, claimable separately)
+
+- [ ] **P1** — `crashbounds` package skeleton (pyproject, install, entry point)  *(owner: __)*
+- [ ] **P2** — Live WRDS fetch in the package (wraps Slice 1/2 pulls)  *(owner: __)*
+- [ ] **P3** — Report-generation module (wraps E-series exhibits)  *(owner: __)*
+- [ ] **I1** — `doit` end-to-end wiring  *(owner: __)*
+- [ ] **I2** — `.env` / `.env.example` + `settings.py` + `requirements.txt`  *(owner: __)*
+
+---
+
+### Extensions
+
+- [ ] **X1** — Sector ETF surfaces (XLF/XLK/XLE/KRE): new secids through the Slice 1 surface pipeline  *(owner: __)*
+- [ ] **X2** — SVB / March 2023 case study: read results (KRE, SIVB) vs. realized; interpret idiosyncratic crash / pinned lower bound  *(owner: __)*
+- [ ] **X3** — Date extension through ~Aug 2025: each slice extends its own date range, then both validate updated exhibits  *(owner: __)*
+
+---
+
+### Joint — both members
+
+- Replication of Tables 1–2 and Figures 1–2 against the paper's period: built by the
+  engine + exhibit tasks above, but **both review and must understand them cold** for
+  the individually-graded oral defense.
+- End-to-end `doit` automation, `.env` config, requirements, and keeping secrets and
+  raw data out of git history.
+- `crashbounds` packaging is integrative (engine + report-gen + pull code) — good
+  shared surface for the "both understand the whole project" defense requirement.
+
 ## Quick Start
 
 The quickest way to run code in this repo is to use the following steps.
