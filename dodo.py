@@ -99,6 +99,51 @@ def task_pull():
         "clean": [],
     }
 
+    yield {
+        "name": "sp500_constituents",
+        "doc": "Pull S&P 500 constituent membership (crsp.msp500list) from WRDS",
+        "actions": [
+            "python ./src/settings.py",
+            "python ./src/pull_sp500.py",
+        ],
+        "targets": [DATA_DIR / "sp500_constituents.parquet"],
+        "file_dep": ["./src/settings.py", "./src/pull_sp500.py"],
+        "clean": [],
+    }
+
+    yield {
+        "name": "crsp_optionm_link",
+        "doc": "Pull the CRSP-OptionMetrics link table (opcrsphist) from WRDS",
+        "actions": [
+            "python ./src/settings.py",
+            "python ./src/pull_link.py",
+        ],
+        "targets": [DATA_DIR / "crsp_optionm_link.parquet"],
+        "file_dep": ["./src/settings.py", "./src/pull_link.py"],
+        "clean": [],
+    }
+
+
+def task_build_sp500_secid_universe():
+    """Build the month-end S&P 500 constituent secid universe (Slice 2).
+
+    Expands index membership onto the last NYSE trading day of each month and
+    attaches the best-score OptionMetrics secid. Depends on the two Slice-2
+    pulls (sp500_constituents, crsp_optionm_link).
+    """
+    return {
+        "actions": ["python ./src/sp500_secid_universe.py"],
+        "targets": [DATA_DIR / "sp500_secid_universe.parquet"],
+        "file_dep": [
+            "./src/sp500_secid_universe.py",
+            "./src/pull_sp500.py",
+            "./src/pull_link.py",
+            DATA_DIR / "sp500_constituents.parquet",
+            DATA_DIR / "crsp_optionm_link.parquet",
+        ],
+        "clean": [],
+    }
+
 
 def task_summary_stats():
     """Generate summary statistics tables"""
