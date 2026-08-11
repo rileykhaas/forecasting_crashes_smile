@@ -1,6 +1,6 @@
 [project]
 name = "forecasting_crashes_smile"
-description = "Replication and extension of Martin & Shi (2025), "Forecasting Crashes with a Smile""
+description = "Replication and extension of Martin & Shi (2025), 'Forecasting Crashes with a Smile'"
 maintainer = "Riley Haas and Marija Jovicic"
 contributors = ["Riley Haas and Marija Jovicic"]
 os_compatibility = ["Windows", "Linux", "macOS"]
@@ -21,6 +21,21 @@ path = "_output/01_example_notebook_interactive.ipynb"
 
 
 [dataframes]
+
+[dataframes.sp500_secid_universe]
+name = "S&P 500 Constituent secid Universe"
+description = "Month-end panel of S&P 500 index members with their OptionMetrics secid attached; the firm universe on which the crash-probability bounds are computed."
+sources = ["CRSP", "OptionMetrics", "WRDS CRSP-OptionMetrics Link"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "CRSP / OptionMetrics via WRDS — subscription required; raw data must not be redistributed or committed to git."
+restrictions = "Academic WRDS subscription. Do not commit the underlying parquet (it lives in the gitignored _data/)."
+pull_method = "WRDS SQL (crsp.msp500list, wrdsapps_link_crsp_optionm.opcrsphist) via pull_sp500.py + pull_link.py, joined onto NYSE month-ends in sp500_secid_universe.py"
+tags = ["S&P 500", "constituents", "OptionMetrics", "CRSP", "universe"]
+date_col = "date"
+path = "./_data/sp500_secid_universe.parquet"
+docs_path = "./docs_src/dataframes/sp500_secid_universe.md"
 
 
 [charts]
