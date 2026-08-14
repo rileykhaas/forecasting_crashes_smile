@@ -24,7 +24,7 @@ import wrds
 from settings import config
 
 DATA_DIR = Path(config("DATA_DIR"))
-WRDS_USERNAME = config("WRDS_USERNAME")
+WRDS_USERNAME = config("WRDS_USERNAME", default="")
 
 
 def pull_crsp_optionm_link(wrds_username=WRDS_USERNAME):

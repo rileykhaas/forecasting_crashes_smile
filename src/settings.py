@@ -185,9 +185,15 @@ defaults = {
 }
 
 
+# Sentinel distinguishing "no default argument passed" from an explicit
+# ``default=None``, so config() can return None as a default without mistaking it
+# for "not provided" (and so it never passes cast=None down to decouple).
+_UNSET = object()
+
+
 def config(
     var_name,
-    default=None,
+    default=_UNSET,
     cast=None,
     settings_py_defaults=defaults,
     cli_vars=cli_vars,
@@ -232,18 +238,25 @@ def config(
             default_value = cast(default_value)
         return default_value
 
-    # 4. Use the default value provided in the local file. Error if not found
-    try:
-        return _config(var_name, default=default, cast=cast)
-    except Exception as e:
-        raise ValueError(
-            f"Configuration variable '{var_name}' is not defined. "
-            f"Please set it via:\n"
-            f"  1. Command line: --{var_name}=value\n"
-            f"  2. Environment variable: export {var_name}=value\n"
-            f"  3. .env file: {var_name}=value\n"
-            f"Original error: {e}"
-        ) from e
+    # 4. Caller-provided default. decouple was already consulted in step 2, so
+    #    there is nothing left to look up -- return the default directly. (Never
+    #    pass cast=None down to decouple, which would call None(value) and raise.)
+    if default is not _UNSET:
+        value = default
+        if cast is not None and value is not None:
+            value = cast(value)
+        if "DIR" in var_name and convert_dir_vars_to_abs_path and value is not None:
+            value = if_relative_make_abs(Path(value))
+        return value
+
+    # 5. Not found anywhere and no default given -> error.
+    raise ValueError(
+        f"Configuration variable '{var_name}' is not defined. "
+        f"Please set it via:\n"
+        f"  1. Command line: --{var_name}=value\n"
+        f"  2. Environment variable: export {var_name}=value\n"
+        f"  3. .env file: {var_name}=value"
+    )
 
 
 def create_directories():
