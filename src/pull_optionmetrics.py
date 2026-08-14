@@ -43,7 +43,14 @@ from sp500_secid_universe import (
 )
 
 DATA_DIR = Path(config("DATA_DIR"))
-WRDS_USERNAME = config("WRDS_USERNAME")
+# Import must not require WRDS credentials: the WRDS-free unit tests import this
+# module for the pure assemble_pull_secids helper, and CI has no WRDS_USERNAME.
+# config() raises (rather than returning a default) when the var is unset, so we
+# catch it. A real pull supplies the username via .env / environment.
+try:
+    WRDS_USERNAME = config("WRDS_USERNAME")
+except Exception:
+    WRDS_USERNAME = ""
 START_DATE = config("START_DATE")
 END_DATE = config("END_DATE")
 
