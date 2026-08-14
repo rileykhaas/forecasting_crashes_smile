@@ -37,6 +37,13 @@ GAMMA = 2
 # Forecasting horizons in months (Section 3.1, Tables 1-2).
 HORIZONS_MONTHS = [1, 3, 6, 12]
 
+# Each horizon maps to exactly one OptionMetrics standardized-surface maturity,
+# in calendar days. The IvyDB volatility surface is standardized at fixed tenors,
+# so a horizon is a single maturity slice -- no cross-maturity interpolation is
+# needed. This is what a faithful replication pulls (and nothing else).
+HORIZON_TO_MATURITY_DAYS = {1: 30, 3: 91, 6: 182, 12: 365}
+MATURITIES_DAYS = [30, 91, 182, 365]
+
 # Crash thresholds q, expressed as GROSS return levels below 1: q = 0.80 means
 # a gross return at or below 0.80, i.e. a drop of 20% or more (Table 1).
 # q = 0.80 (the "down 20%" case) is the paper's workhorse.
@@ -47,6 +54,27 @@ THRESHOLDS_Q = [0.70, 0.80, 0.90]
 # OptionMetrics secid for the S&P 500 index (the "market"). Individual names
 # are S&P 500 constituents, resolved via the security-name history file.
 SPX_SECID = 108105
+
+# Extension universe (BEYOND the paper): the 11 Select Sector SPDR ETFs, plus
+# KRE (SPDR S&P Regional Banking) for the SVB case study. These are NOT S&P 500
+# constituents and never flow through crsp.msp500list; their secids are resolved
+# from tickers via the OptionMetrics security file (securd) and added to the
+# OptionMetrics pull set alongside SPX_SECID. They are kept OUT of the
+# replication constituent panel so Tables 1-2 remain exactly the paper's.
+SECTOR_ETF_TICKERS = [
+    "XLB",   # Materials
+    "XLC",   # Communication Services (options only from ~2018-06)
+    "XLE",   # Energy
+    "XLF",   # Financials
+    "XLI",   # Industrials
+    "XLK",   # Technology
+    "XLP",   # Consumer Staples
+    "XLRE",  # Real Estate (options only from ~2015-10)
+    "XLU",   # Utilities
+    "XLV",   # Health Care
+    "XLY",   # Consumer Discretionary
+]
+EXTENSION_ETF_TICKERS = SECTOR_ETF_TICKERS + ["KRE"]  # + regional banks (SVB, #31)
 
 # Keys on which the analysis-facing tables (realized_returns, results) join.
 JOIN_KEYS = ["date", "secid", "horizon_months", "threshold_q"]

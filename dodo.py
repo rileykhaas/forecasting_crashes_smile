@@ -123,6 +123,29 @@ def task_pull():
         "clean": [],
     }
 
+    yield {
+        "name": "optionmetrics",
+        "doc": "Pull OptionMetrics surface/rates/security file for the secid universe + ETFs",
+        "actions": [
+            "python ./src/settings.py",
+            "python ./src/pull_optionmetrics.py",
+        ],
+        "targets": [
+            DATA_DIR / "optionm_vol_surface.parquet",
+            DATA_DIR / "optionm_zero_curve.parquet",
+            DATA_DIR / "optionm_security_names.parquet",
+            DATA_DIR / "optionm_pull_secids.parquet",
+        ],
+        "file_dep": [
+            "./src/settings.py",
+            "./src/pull_optionmetrics.py",
+            "./src/sp500_secid_universe.py",
+            "./src/schema.py",
+            DATA_DIR / "sp500_secid_universe.parquet",
+        ],
+        "clean": [],
+    }
+
 
 def task_build_sp500_secid_universe():
     """Build the month-end S&P 500 constituent secid universe (Slice 2).
