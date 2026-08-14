@@ -37,6 +37,65 @@ date_col = "date"
 path = "./_data/sp500_secid_universe.parquet"
 docs_path = "./docs_src/dataframes/sp500_secid_universe.md"
 
+[dataframes.optionm_vol_surface]
+name = "OptionMetrics Volatility Surface (raw)"
+description = "Raw IvyDB volatility-surface points (implied vol by strike, delta, cp_flag) at the 1/3/6/12-month maturities, month-end, for the S&P 500 index, constituents, and the extension ETFs. The option-implied 'smile' the crash bounds are built from."
+sources = ["OptionMetrics IvyDB (optionm_all.vsurfd)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "OptionMetrics via WRDS — subscription required; raw data must not be redistributed or committed to git."
+restrictions = "Academic WRDS subscription. Raw pull (unfiltered); Appendix-D cleaning happens in clean_surface.py (#17). Large table; lives in gitignored _data/."
+pull_method = "WRDS SQL over per-year optionm_all.vsurfd{YYYY}, filtered to universe+ETF secids, days in {30,91,182,365}, and month-end dates (pull_optionmetrics.py)"
+tags = ["OptionMetrics", "volatility surface", "implied vol", "smile", "raw"]
+date_col = "date"
+path = "./_data/optionm_vol_surface.parquet"
+docs_path = "./docs_src/dataframes/optionm_vol_surface.md"
+
+[dataframes.optionm_zero_curve]
+name = "OptionMetrics Zero-Coupon Curve (raw)"
+description = "Raw OptionMetrics zero-coupon yield curve (rate by maturity in days); the risk-free rates used to price options and form gross returns."
+sources = ["OptionMetrics IvyDB (optionm_all.zerocd)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "OptionMetrics via WRDS — subscription required; raw data must not be redistributed or committed to git."
+restrictions = "Academic WRDS subscription. Raw pull; maturity interpolation happens in rates.py (#17). Lives in gitignored _data/."
+pull_method = "WRDS SQL over optionm_all.zerocd across the sample window (pull_optionmetrics.py)"
+tags = ["OptionMetrics", "risk-free", "zero curve", "rates", "raw"]
+date_col = "date"
+path = "./_data/optionm_zero_curve.parquet"
+docs_path = "./docs_src/dataframes/optionm_zero_curve.md"
+
+[dataframes.optionm_security_names]
+name = "OptionMetrics Security Name History (secnmd)"
+description = "OptionMetrics secid name history (ticker/issuer by effect_date) for the pulled universe; used to label (secid, date) rows with the ticker active in that month via merge_asof."
+sources = ["OptionMetrics IvyDB (optionm_all.secnmd)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "OptionMetrics via WRDS — subscription required; raw data must not be redistributed or committed to git."
+restrictions = "Academic WRDS subscription. Lives in gitignored _data/."
+pull_method = "WRDS SQL over optionm_all.secnmd for the pulled secids (pull_optionmetrics.py)"
+tags = ["OptionMetrics", "secid", "ticker", "name history"]
+date_col = "effect_date"
+path = "./_data/optionm_security_names.parquet"
+docs_path = "./docs_src/dataframes/optionm_security_names.md"
+
+[dataframes.optionm_pull_secids]
+name = "OptionMetrics Pull Universe (secid manifest)"
+description = "The secid set the OptionMetrics surface was pulled for, each tagged by source: the S&P 500 index, its constituents, or the extension sector ETFs (Select Sector SPDRs + KRE). Documents exactly what the replication vs the extension covers."
+sources = ["Derived (sp500_secid_universe #14 + OptionMetrics secnmd resolution)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from CRSP / OptionMetrics via WRDS — subscription required."
+restrictions = "Lives in gitignored _data/."
+pull_method = "Union of get_universe_secids(#14) + SPX_SECID + secnmd-resolved ETF secids (pull_optionmetrics.py)"
+tags = ["OptionMetrics", "secid", "universe", "sector ETF", "extension"]
+path = "./_data/optionm_pull_secids.parquet"
+docs_path = "./docs_src/dataframes/optionm_pull_secids.md"
+
 
 [charts]
 
