@@ -24,7 +24,7 @@ import wrds
 from settings import config
 
 DATA_DIR = Path(config("DATA_DIR"))
-WRDS_USERNAME = config("WRDS_USERNAME")
+WRDS_USERNAME = config("WRDS_USERNAME", default="")
 START_DATE = config("START_DATE")
 END_DATE = config("END_DATE")
 
