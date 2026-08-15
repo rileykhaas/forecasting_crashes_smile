@@ -13,20 +13,104 @@ secid rather than permno.
 Output columns are defined by schema.SCHEMAS["realized_returns"].
 """
 
-from settings import config
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
 import schema
+from settings import config
+
+DATA_DIR = Path(config("DATA_DIR"))
 
 
 def build_realized_returns(crsp_monthly, link_table):
     """Compute gross forward returns and key them by secid.
 
+    Parameters
+    ----------
+    crsp_monthly : DataFrame
+        Output of ``pull_CRSP_stock.pull_CRSP_monthly_file`` (must have
+        permno, date, ret; ret already has delisting returns folded in via
+        the CIZ mthret field).
+    link_table : DataFrame
+        Output of ``pull_link.pull_crsp_optionm_link``
+        (secid, permno, score, sdate, edate).
+
     Returns a DataFrame conforming to schema.SCHEMAS["realized_returns"]:
     columns [date, secid, horizon_months, realized_gross_return].
     """
-    raise NotImplementedError
+    # 1) One row per (permno, month) with the gross monthly return.
+    monthly = crsp_monthly[["permno", "date", "ret"]].dropna(subset=["ret"]).copy()
+    monthly["date"] = pd.to_datetime(monthly["date"]).dt.to_period("M")
+    monthly = monthly.drop_duplicates(["permno", "date"]).sort_values(
+        ["permno", "date"]
+    )
+    monthly["gross_ret"] = 1.0 + monthly["ret"]
+
+    # 2) Wide matrix (month x permno) on a *complete* monthly grid, so that a
+    #    positional rolling window of length h always spans exactly h calendar
+    #    months, even for permnos whose history has gaps.
+    wide = monthly.pivot(index="date", columns="permno", values="gross_ret")
+    full_index = pd.period_range(wide.index.min(), wide.index.max(), freq="M")
+    full_index.name = "date"
+    wide = wide.reindex(full_index)
+
+    # 3) For each horizon h, the forward gross return from t is
+    #    prod_{k=1}^{h} gross_ret[t+k]. A rolling(h) product ending at row j
+    #    covers rows [j-h+1, j]; shifting that back by h rows aligns it to
+    #    row t = j - h. min_periods=h means any month gap inside the window
+    #    (not just at the edges) yields NaN, so an incomplete horizon is
+    #    dropped rather than silently bridged.
+    #
+    #    A log-sum (instead of a direct rolling product) would be the faster
+    #    route, but pandas' rolling .sum() returns NaN -- not -inf -- for a
+    #    window containing log(0), silently dropping exactly the rows where a
+    #    name was wiped out (gross_ret == 0). A direct product handles that
+    #    case correctly, so it's used despite being slower.
+    frames = []
+    for h in schema.HORIZONS_MONTHS:
+        rolled = wide.rolling(window=h, min_periods=h).apply(np.prod, raw=True)
+        fwd = rolled.shift(-h)
+        long = (
+            fwd.reset_index()
+            .melt(id_vars="date", var_name="permno", value_name="realized_gross_return")
+            .dropna(subset=["realized_gross_return"])
+        )
+        long["horizon_months"] = h
+        frames.append(long)
+
+    out = pd.concat(frames, ignore_index=True)
+    out["date"] = out["date"].dt.to_timestamp("M")
+
+    # 4) Attach secid via a date-valid link, preferring the best (lowest)
+    #    score -- same rule used in sp500_secid_universe.py. Rows for permnos
+    #    with no valid OptionMetrics link on that date are dropped, since
+    #    realized_returns is keyed on secid (unlinked names have no crash
+    #    bound to compare against).
+    cand = out.merge(link_table, on="permno", how="inner")
+    valid = (cand["sdate"] <= cand["date"]) & (cand["date"] <= cand["edate"])
+    best = (
+        cand.loc[valid]
+        .sort_values(["date", "permno", "horizon_months", "score", "secid"])
+        .drop_duplicates(["date", "permno", "horizon_months"], keep="first")
+    )
+
+    result = best[["date", "secid", "horizon_months", "realized_gross_return"]].copy()
+    result["secid"] = result["secid"].astype("int64")
+    result["horizon_months"] = result["horizon_months"].astype("int64")
+    result = result.sort_values(["date", "secid", "horizon_months"]).reset_index(
+        drop=True
+    )
+    return result
 
 
 if __name__ == "__main__":
-    df = build_realized_returns(...)
+    from pull_CRSP_stock import load_CRSP_monthly_file
+    from pull_link import load_crsp_optionm_link
+
+    crsp_monthly = load_CRSP_monthly_file()
+    link_table = load_crsp_optionm_link()
+    df = build_realized_returns(crsp_monthly, link_table)
     schema.validate_schema(df, "realized_returns")
-    df.to_parquet(config("DATA_DIR") / "realized_returns.parquet")
+    df.to_parquet(DATA_DIR / "realized_returns.parquet")

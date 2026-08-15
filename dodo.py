@@ -168,6 +168,29 @@ def task_build_sp500_secid_universe():
     }
 
 
+def task_build_realized_returns():
+    """Build CRSP forward realized gross returns, keyed by secid (Slice 2).
+
+    Computes gross forward returns for each horizon in schema.HORIZONS_MONTHS
+    from the CRSP monthly file (delisting returns folded into mthret), and
+    attaches the OptionMetrics secid via the CRSP-OptionMetrics link. Depends
+    on the CRSP stock pull and the link table pull.
+    """
+    return {
+        "actions": ["python ./src/realized_returns.py"],
+        "targets": [DATA_DIR / "realized_returns.parquet"],
+        "file_dep": [
+            "./src/realized_returns.py",
+            "./src/pull_CRSP_stock.py",
+            "./src/pull_link.py",
+            "./src/schema.py",
+            DATA_DIR / "CRSP_monthly_stock.parquet",
+            DATA_DIR / "crsp_optionm_link.parquet",
+        ],
+        "clean": [],
+    }
+
+
 def task_summary_stats():
     """Generate summary statistics tables"""
     file_dep = ["./src/example_table.py"]
