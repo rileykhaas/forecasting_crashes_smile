@@ -168,6 +168,42 @@ def task_build_sp500_secid_universe():
     }
 
 
+def task_rates():
+    """Clean the OptionMetrics zero curve into rates.parquet (Slice 1)."""
+    return {
+        "actions": ["python ./src/rates.py"],
+        "targets": [DATA_DIR / "rates.parquet"],
+        "file_dep": [
+            "./src/rates.py",
+            "./src/schema.py",
+            DATA_DIR / "optionm_zero_curve.parquet",
+        ],
+        "clean": [],
+    }
+
+
+def task_clean_surface():
+    """Filter the OptionMetrics surface into clean_surface.parquet (Slice 1).
+
+    Applies the paper's Appendix-D filters and attaches CRSP spot (constituents
+    via the #14 link, the S&P 500 index via spindx).
+    """
+    return {
+        "actions": ["python ./src/clean_surface.py"],
+        "targets": [DATA_DIR / "clean_surface.parquet"],
+        "file_dep": [
+            "./src/clean_surface.py",
+            "./src/schema.py",
+            "./src/sp500_secid_universe.py",
+            DATA_DIR / "optionm_vol_surface.parquet",
+            DATA_DIR / "sp500_secid_universe.parquet",
+            DATA_DIR / "CRSP_monthly_stock.parquet",
+            DATA_DIR / "CRSP_MSIX.parquet",
+        ],
+        "clean": [],
+    }
+
+
 def task_summary_stats():
     """Generate summary statistics tables"""
     file_dep = ["./src/example_table.py"]
