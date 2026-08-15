@@ -1,4 +1,8 @@
 [project]
+# Explicit pipeline id so dataframes are labelled "forecasting_crashes_smile:..."
+# rather than deriving a personal scope from the git remote (this is a shared
+# project, not one owner's).
+id = "forecasting_crashes_smile"
 name = "forecasting_crashes_smile"
 description = "Replication and extension of Martin & Shi (2025), 'Forecasting Crashes with a Smile'"
 maintainer = "Riley Haas and Marija Jovicic"
