@@ -21,10 +21,11 @@ It applies the four filtering criteria of Martin & Shi (2025), Appendix D:
 observed* surface — it does **not** interpolate, extrapolate, or price. The
 linear-within / flat-outside interpolation, the 2000-step Black-Scholes grid, and
 the Breeden-Litzenberger marginals live in the engine (`rnd.py`, #18), keeping
-cleaning separate from analysis. Since implied vol is a function of the strike,
-calls and puts collapse onto the single `moneyness` axis (cp_flag/delta are
-dropped); the engine selects out-of-the-money options by moneyness-vs-forward at
-pricing time, as the paper does.
+cleaning separate from analysis. Both put and call quotes are kept (`cp_flag`), so
+the engine can select the out-of-the-money side (puts below the forward, calls
+above) before building the smile — as the paper does. Put and call implied vol
+differ at the same moneyness, so keeping `cp_flag` avoids interleaving them into a
+non-monotonic curve.
 
 The extension ETFs (Select Sector SPDRs + KRE) are outside the paper's scope and
 are not spot-matched here; they are handled with the sector-ETF extension (#34).
@@ -39,3 +40,4 @@ Cleaned output — lives in the gitignored `_data/`; regenerate with
 - **moneyness**: `float64` — `impl_strike / spot_price` (K/S).
 - **implied_vol**: `float64` — Black-Scholes implied volatility at that point.
 - **spot_price**: `float64` — CRSP spot (S); constant within a (date, secid).
+- **cp_flag**: `string` — `P` (put) or `C` (call); the engine keeps the OTM side.
