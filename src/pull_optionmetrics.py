@@ -100,9 +100,7 @@ def resolve_etf_secids(tickers=EXTENSION_ETF_TICKERS, wrds_username=WRDS_USERNAM
             print(f"[resolve_etf_secids] WARNING: no secid found for {tkr!r}")
             continue
         # Secid whose latest name spell is this ticker == the current holder.
-        secid = int(
-            rows.sort_values("effect_date")["secid"].astype("int64").iloc[-1]
-        )
+        secid = int(rows.sort_values("effect_date")["secid"].astype("int64").iloc[-1])
         candidates = sorted(rows["secid"].dropna().astype("int64").unique())
         if len(candidates) > 1:
             print(
@@ -181,9 +179,7 @@ def pull_vol_surface(
             """
             year_df = db.raw_sql(query, date_cols=["date"])
             frames.append(year_df)
-            print(
-                f"[pull_vol_surface] {year}: {len(year_df):,} rows", flush=True
-            )
+            print(f"[pull_vol_surface] {year}: {len(year_df):,} rows", flush=True)
     finally:
         db.close()
 
@@ -194,7 +190,9 @@ def pull_vol_surface(
     return df
 
 
-def pull_zero_curve(start_date=START_DATE, end_date=END_DATE, wrds_username=WRDS_USERNAME):
+def pull_zero_curve(
+    start_date=START_DATE, end_date=END_DATE, wrds_username=WRDS_USERNAME
+):
     """Pull the OptionMetrics zero-coupon yield curve (``zerocd``).
 
     Pulled over the whole sample window (the table is small); per-date maturity

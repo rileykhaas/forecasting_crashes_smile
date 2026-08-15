@@ -62,17 +62,17 @@ SPX_SECID = 108105
 # OptionMetrics pull set alongside SPX_SECID. They are kept OUT of the
 # replication constituent panel so Tables 1-2 remain exactly the paper's.
 SECTOR_ETF_TICKERS = [
-    "XLB",   # Materials
-    "XLC",   # Communication Services (options only from ~2018-06)
-    "XLE",   # Energy
-    "XLF",   # Financials
-    "XLI",   # Industrials
-    "XLK",   # Technology
-    "XLP",   # Consumer Staples
+    "XLB",  # Materials
+    "XLC",  # Communication Services (options only from ~2018-06)
+    "XLE",  # Energy
+    "XLF",  # Financials
+    "XLI",  # Industrials
+    "XLK",  # Technology
+    "XLP",  # Consumer Staples
     "XLRE",  # Real Estate (options only from ~2015-10)
-    "XLU",   # Utilities
-    "XLV",   # Health Care
-    "XLY",   # Consumer Discretionary
+    "XLU",  # Utilities
+    "XLV",  # Health Care
+    "XLY",  # Consumer Discretionary
 ]
 EXTENSION_ETF_TICKERS = SECTOR_ETF_TICKERS + ["KRE"]  # + regional banks (SVB, #31)
 

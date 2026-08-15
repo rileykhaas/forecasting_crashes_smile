@@ -43,9 +43,9 @@ def test_dispersion_band_is_exclusive():
     """dispersion must be strictly in (0, 0.05); the 0 and 0.05 edges are dropped."""
     raw = pd.concat(
         [
-            _raw(secid=1, dispersion=0.03),   # inside -> kept
-            _raw(secid=2, dispersion=0.05),   # upper edge -> dropped
-            _raw(secid=3, dispersion=0.0),    # lower edge -> dropped
+            _raw(secid=1, dispersion=0.03),  # inside -> kept
+            _raw(secid=2, dispersion=0.05),  # upper edge -> dropped
+            _raw(secid=3, dispersion=0.0),  # lower edge -> dropped
         ]
     )
     spot = pd.concat([_spot(1), _spot(2), _spot(3)])

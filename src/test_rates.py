@@ -37,7 +37,7 @@ def test_flat_extrapolation_beyond_range():
             ]
         )
     )
-    assert by[30] == 2.0   # below the curve -> first rate
+    assert by[30] == 2.0  # below the curve -> first rate
     assert by[365] == 3.0  # above the curve -> last rate
 
 

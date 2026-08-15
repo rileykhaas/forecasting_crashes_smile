@@ -64,11 +64,7 @@ def month_end_trading_days(start_date=START_DATE, end_date=END_DATE, calendar="N
     schedule = cal.schedule(start_date=start_date, end_date=end_date)
     days = pd.DatetimeIndex(schedule.index).normalize()
     # Last session within each calendar (year, month).
-    last = (
-        pd.Series(days, index=days)
-        .groupby([days.year, days.month])
-        .max()
-    )
+    last = pd.Series(days, index=days).groupby([days.year, days.month]).max()
     return pd.DatetimeIndex(sorted(last.to_numpy()))
 
 

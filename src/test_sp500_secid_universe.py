@@ -157,9 +157,7 @@ def test_carry_forward_current_members():
     assert by[pd.Timestamp("2025-02-28")] == {1}
     # Only the frozen 2025 rows are flagged.
     assert on.loc[on["date"] > pd.Timestamp("2024-12-31"), "carried_forward"].all()
-    assert not on.loc[
-        on["date"] <= pd.Timestamp("2024-12-31"), "carried_forward"
-    ].any()
+    assert not on.loc[on["date"] <= pd.Timestamp("2024-12-31"), "carried_forward"].any()
 
 
 def test_month_end_trading_days_are_real_sessions():
