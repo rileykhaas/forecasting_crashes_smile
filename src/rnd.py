@@ -2,10 +2,11 @@
 
 Turns a cleaned volatility surface (for one date x secid x maturity) into the
 risk-neutral CDF Q(.) of the gross return, following Breeden & Litzenberger
-(1978) and the construction in Appendix D: build Black-Scholes OTM option
-prices on a fine strike grid, take the relevant gradients to recover the
-marginal CDF, fit an isotonic regression to enforce monotonicity, and winsorize
-into [0, 1].
+(1978) and the construction in Appendix D: select the out-of-the-money side of
+each put/call pair (K <= S*Rf uses puts, K > S*Rf uses calls, Rf = e^{r tau}),
+build Black-Scholes prices on a fine strike grid, take the relevant gradients
+to recover the marginal CDF, fit an isotonic regression to enforce
+monotonicity, and winsorize into [0, 1].
 
 Consumes clean_surface + rates. Produces the marginals Q_m (index) and Q_i
 (individual name) used everywhere downstream.
@@ -80,8 +81,9 @@ def risk_neutral_cdf(surface_slice, rate, n_grid=N_GRID):
     ----------
     surface_slice : DataFrame
         Rows of schema.SCHEMAS['clean_surface'] for a single (date, secid,
-        days_to_maturity) -- i.e. one smile. Must have at least two distinct
-        ``moneyness`` points.
+        days_to_maturity) -- i.e. one smile, BOTH put and call quotes. Must
+        have a ``cp_flag`` column ('P'/'C') and at least two distinct OTM
+        ``moneyness`` points after the filter below.
     rate : float
         Continuously-compounded annualized zero rate for this maturity, as a
         DECIMAL (0.03 = 3%). NOTE: rates.parquet's ``zero_rate`` is in percentage
@@ -100,11 +102,24 @@ def risk_neutral_cdf(surface_slice, rate, n_grid=N_GRID):
             "rates.parquet stores zero_rate in percent -- divide by 100 first."
         )
 
-    slice_ = surface_slice.sort_values("moneyness")
+    days = int(surface_slice["days_to_maturity"].iloc[0])
+    maturity_years = days / 365.0
+
+    # Only out-of-the-money options are used (Appendix D): puts for K <= S*Rf,
+    # calls for K > S*Rf, where Rf = e^{r tau} is the forward growth factor.
+    # clean_surface.parquet carries BOTH sides' quotes on the same moneyness
+    # axis -- put and call implied vol at similar moneyness are NOT
+    # interchangeable (they can differ sharply, especially in stress), so
+    # without this filter the two curves interleave into a single
+    # non-monotonic, effectively two-valued "smile."
+    forward = np.exp(rate * maturity_years)
+    is_otm = (
+        (surface_slice["cp_flag"] == "P") & (surface_slice["moneyness"] <= forward)
+    ) | ((surface_slice["cp_flag"] == "C") & (surface_slice["moneyness"] > forward))
+    slice_ = surface_slice.loc[is_otm].sort_values("moneyness")
+
     moneyness = slice_["moneyness"].to_numpy(dtype=float)
     implied_vol = slice_["implied_vol"].to_numpy(dtype=float)
-    days = int(slice_["days_to_maturity"].iloc[0])
-    maturity_years = days / 365.0
 
     # Fine strike grid over the paper's fixed moneyness range K/S in [1/L, L]
     # (Appendix D: L=3 for 1/3/6-month, L=5 for 12-month), with N_GRID uniform

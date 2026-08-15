@@ -94,6 +94,7 @@ SCHEMAS = {
         "moneyness": "float",
         "implied_vol": "float",
         "spot_price": "float",
+        "cp_flag": "string",
     },
     "rates": {
         "date": "datetime",
@@ -133,6 +134,8 @@ def _kind_ok(series, kind):
         return ptypes.is_integer_dtype(series)
     if kind == "float":
         return ptypes.is_float_dtype(series)
+    if kind == "string":
+        return ptypes.is_string_dtype(series) or ptypes.is_object_dtype(series)
     raise ValueError(f"Unknown dtype kind: {kind}")
 
 

@@ -22,17 +22,31 @@ MATURITY_DAYS = 30
 MATURITY_YEARS = MATURITY_DAYS / 365.0
 
 
-def _surface_slice(moneyness, implied_vol, days_to_maturity=MATURITY_DAYS):
-    """Build a synthetic one-smile slice matching schema.SCHEMAS['clean_surface']."""
+def _surface_slice(
+    moneyness, implied_vol, days_to_maturity=MATURITY_DAYS, rate=RATE, cp_flag=None
+):
+    """Build a synthetic one-smile slice matching schema.SCHEMAS['clean_surface'].
+
+    If ``cp_flag`` isn't given, each point is labeled on its own OTM side (P
+    at/below the forward, C above it) -- i.e. by default this already IS a
+    clean OTM-only smile, matching what real clean_surface.parquet rows look
+    like after rnd.py's OTM filter. Pass explicit ``cp_flag`` to build a
+    fixture with ITM-side rows too (see test_itm_side_is_ignored below).
+    """
     n = len(moneyness)
+    moneyness = np.asarray(moneyness, dtype="float64")
+    if cp_flag is None:
+        forward = np.exp(rate * (days_to_maturity / 365.0))
+        cp_flag = np.where(moneyness <= forward, "P", "C")
     return pd.DataFrame(
         {
             "date": pd.to_datetime(["2020-01-31"] * n),
             "secid": np.full(n, schema.SPX_SECID, dtype="int64"),
             "days_to_maturity": np.full(n, days_to_maturity, dtype="int64"),
-            "moneyness": np.asarray(moneyness, dtype="float64"),
+            "moneyness": moneyness,
             "implied_vol": np.asarray(implied_vol, dtype="float64"),
             "spot_price": np.full(n, 100.0),
+            "cp_flag": np.asarray(cp_flag),
         }
     )
 
@@ -120,3 +134,40 @@ def test_percent_rate_is_rejected(flat_vol_slice):
     """A percent rate (e.g. 3.0) is caught, not silently mispriced as r=300%."""
     with pytest.raises(ValueError, match="decimal"):
         risk_neutral_cdf(flat_vol_slice, 3.0)
+
+
+def test_itm_side_is_ignored_even_with_garbage_vol():
+    """The ITM side of each strike must not influence the fitted smile at all.
+
+    Regression test: clean_surface.parquet carries BOTH put and call quotes
+    on the same moneyness axis (OptionMetrics gives a full delta grid for
+    each side, not just the OTM half). Real put/call vol at similar moneyness
+    can differ sharply -- e.g. AIG in Oct 2008 had adjacent points at 1.32 and
+    1.43 vol -- so without an OTM filter the "smile" isn't even single-valued.
+    Here the ITM side is planted with an absurd vol (5.0) that must be
+    completely ignored, not just outweighed or smoothed over.
+    """
+    moneyness = np.linspace(0.5, 1.5, 25)
+    forward = np.exp(RATE * MATURITY_YEARS)
+    otm_flag = np.where(moneyness <= forward, "P", "C")
+    itm_flag = np.where(moneyness <= forward, "C", "P")  # the wrong side
+
+    otm_vol = np.full_like(moneyness, 0.25)
+    garbage_itm_vol = np.full_like(moneyness, 5.0)
+
+    both_sides = pd.concat(
+        [
+            _surface_slice(moneyness, otm_vol, cp_flag=otm_flag),
+            _surface_slice(moneyness, garbage_itm_vol, cp_flag=itm_flag),
+        ],
+        ignore_index=True,
+    )
+    otm_only = _surface_slice(moneyness, otm_vol, cp_flag=otm_flag)
+
+    cdf_with_garbage_itm = risk_neutral_cdf(both_sides, RATE)
+    cdf_otm_only = risk_neutral_cdf(otm_only, RATE)
+
+    q_levels = np.array([0.70, 0.80, 0.90, 1.00, 1.10])
+    np.testing.assert_allclose(
+        cdf_with_garbage_itm(q_levels), cdf_otm_only(q_levels), atol=1e-9
+    )

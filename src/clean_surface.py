@@ -14,9 +14,8 @@ Boundary with the engine (#18): this file does NOT interpolate/extrapolate or
 price. It emits the *filtered observed* surface. The linear-within / flat-outside
 interpolation, the 2000-step Black-Scholes grid, and the Breeden-Litzenberger
 marginals all live in the engine (rnd.py, #18), keeping cleaning separate from
-analysis. Because iv is a function of the strike, calls and puts collapse onto the
-single ``moneyness`` axis (cp_flag/delta are dropped); the engine selects OTM by
-moneyness-vs-forward at pricing time, exactly as the paper does.
+analysis. ``cp_flag`` is kept so the engine can select OTM by moneyness-vs-forward
+at pricing time, exactly as the paper does.
 
 Spot sourcing: constituents get CRSP ``|prc|`` via the #14 secid<->permno link;
 the S&P 500 index (SPX_SECID) gets the CRSP S&P 500 level (``spindx`` from the
@@ -92,7 +91,8 @@ def clean_surface(raw_surface, spot_by_month):
     Returns
     -------
     DataFrame conforming to schema.SCHEMAS["clean_surface"]:
-    columns [date, secid, days_to_maturity, moneyness, implied_vol, spot_price].
+    columns [date, secid, days_to_maturity, moneyness, implied_vol, spot_price,
+    cp_flag].
     """
     df = raw_surface.copy()
     df["secid"] = df["secid"].astype("int64")
@@ -118,7 +118,15 @@ def clean_surface(raw_surface, spot_by_month):
     df = df[n_strikes > 10]
 
     out = df[
-        ["date", "secid", "days_to_maturity", "moneyness", "implied_vol", "spot_price"]
+        [
+            "date",
+            "secid",
+            "days_to_maturity",
+            "moneyness",
+            "implied_vol",
+            "spot_price",
+            "cp_flag",
+        ]
     ].copy()
     out["secid"] = out["secid"].astype("int64")
     out["days_to_maturity"] = out["days_to_maturity"].astype("int64")
