@@ -96,6 +96,36 @@ tags = ["OptionMetrics", "secid", "universe", "sector ETF", "extension"]
 path = "./_data/optionm_pull_secids.parquet"
 docs_path = "./docs_src/dataframes/optionm_pull_secids.md"
 
+[dataframes.clean_surface]
+name = "Cleaned Volatility Surface"
+description = "The filtered, tidy option-implied volatility surface: one row per (date, secid, maturity, moneyness) with implied vol and CRSP spot, after the paper's Appendix-D filters. The analysis-ready 'smile' the crash bounds are computed from."
+sources = ["OptionMetrics IvyDB", "CRSP"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+restrictions = "Cleaned output; lives in gitignored _data/. Regenerate with `doit clean_surface`."
+pull_method = "clean_surface.py: Appendix-D filters (CRSP spot exists; strike>0; dispersion in (0,0.05); >10 strikes/firm-month-maturity) on optionm_vol_surface, moneyness = impl_strike/CRSP spot"
+tags = ["volatility surface", "implied vol", "smile", "cleaned", "replication"]
+date_col = "date"
+path = "./_data/clean_surface.parquet"
+docs_path = "./docs_src/dataframes/clean_surface.md"
+
+[dataframes.rates]
+name = "Risk-Free Zero Curve (cleaned)"
+description = "The OptionMetrics zero-coupon risk-free curve, interpolated to the 1/3/6/12-month surface maturities and sampled at each month-end formation date. Joins onto clean_surface for option pricing."
+sources = ["OptionMetrics IvyDB"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from OptionMetrics via WRDS — subscription required; not redistributable."
+restrictions = "Cleaned output; lives in gitignored _data/. Regenerate with `doit rates`."
+pull_method = "rates.py: linear interpolation of optionm_zero_curve to {30,91,182,365} days at each month-end"
+tags = ["risk-free", "zero curve", "rates", "cleaned"]
+date_col = "date"
+path = "./_data/rates.parquet"
+docs_path = "./docs_src/dataframes/rates.md"
+
 
 [charts]
 
