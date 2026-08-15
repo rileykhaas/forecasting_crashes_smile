@@ -20,6 +20,7 @@ import pandas as pd
 
 import schema
 from settings import config
+from sp500_secid_universe import month_end_trading_days
 
 DATA_DIR = Path(config("DATA_DIR"))
 
@@ -42,18 +43,23 @@ def build_realized_returns(crsp_monthly, link_table):
     """
     # 1) One row per (permno, month) with the gross monthly return.
     monthly = crsp_monthly[["permno", "date", "ret"]].dropna(subset=["ret"]).copy()
-    monthly["date"] = pd.to_datetime(monthly["date"]).dt.to_period("M")
-    monthly = monthly.drop_duplicates(["permno", "date"]).sort_values(
-        ["permno", "date"]
+    monthly["date"] = pd.to_datetime(monthly["date"])
+    monthly["period"] = monthly["date"].dt.to_period("M")
+
+    trading_days = month_end_trading_days(monthly["date"].min(), monthly["date"].max())
+    period_to_date = pd.Series(trading_days, index=trading_days.to_period("M"))
+
+    monthly = monthly.drop_duplicates(["permno", "period"]).sort_values(
+        ["permno", "period"]
     )
     monthly["gross_ret"] = 1.0 + monthly["ret"]
 
     # 2) Wide matrix (month x permno) on a *complete* monthly grid, so that a
     #    positional rolling window of length h always spans exactly h calendar
     #    months, even for permnos whose history has gaps.
-    wide = monthly.pivot(index="date", columns="permno", values="gross_ret")
+    wide = monthly.pivot(index="period", columns="permno", values="gross_ret")
     full_index = pd.period_range(wide.index.min(), wide.index.max(), freq="M")
-    full_index.name = "date"
+    full_index.name = "period"
     wide = wide.reindex(full_index)
 
     # 3) For each horizon h, the forward gross return from t is
@@ -74,14 +80,18 @@ def build_realized_returns(crsp_monthly, link_table):
         fwd = rolled.shift(-h)
         long = (
             fwd.reset_index()
-            .melt(id_vars="date", var_name="permno", value_name="realized_gross_return")
+            .melt(
+                id_vars="period", var_name="permno", value_name="realized_gross_return"
+            )
             .dropna(subset=["realized_gross_return"])
         )
         long["horizon_months"] = h
         frames.append(long)
 
     out = pd.concat(frames, ignore_index=True)
-    out["date"] = out["date"].dt.to_timestamp("M")
+    # Map back to the real trading date
+    out["date"] = out["period"].map(period_to_date)
+    out = out.dropna(subset=["date"]).drop(columns="period")
 
     # 4) Attach secid via a date-valid link, preferring the best (lowest)
     #    score -- same rule used in sp500_secid_universe.py. Rows for permnos
