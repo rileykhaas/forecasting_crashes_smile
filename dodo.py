@@ -357,7 +357,9 @@ def task_build_chartbook_site():
 
     return {
         "actions": [
-            "chartbook build -f",
+            # --size-threshold 2000 (MB) so the large surface parquets still get
+            # a data glimpse (date range etc.) instead of "N/A (large file)".
+            "chartbook build -f --size-threshold 2000",
         ],  # Use docs as build destination
         "targets": sphinx_targets,
         "file_dep": file_dep,

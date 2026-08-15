@@ -9,7 +9,8 @@ maintainer = "Riley Haas and Marija Jovicic"
 contributors = ["Riley Haas and Marija Jovicic"]
 os_compatibility = ["Windows", "Linux", "macOS"]
 build = """
-module load anaconda3/3.11.4 TeXLive/2023
+conda env create -f environment.yml
+conda activate forecasting_crashes_smile
 doit
 """
 
