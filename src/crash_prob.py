@@ -8,4 +8,4 @@ is simply P*[R_i <= q] = Q_i(q). This is the P^* column and also the naive
 
 def risk_neutral_crash_prob(cdf_i, threshold_q):
     """Return P*[R_i <= q] by evaluating the individual-name CDF at q."""
-    raise NotImplementedError
+    return cdf_i(threshold_q)
