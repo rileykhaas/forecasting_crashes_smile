@@ -85,11 +85,9 @@ def task_config():
     }
 
 
-def task_pull():
-    """Pull data from external sources"""
-    yield {
-        "name": "crsp_stock",
-        "doc": "Pull CRSP stock data from WRDS",
+def task_pull_crsp_stock():
+    """Pull the CRSP monthly stock panel from WRDS."""
+    return {
         "actions": [
             "python ./src/settings.py",
             "python ./src/pull_CRSP_stock.py",
@@ -99,9 +97,10 @@ def task_pull():
         "clean": [],
     }
 
-    yield {
-        "name": "sp500_constituents",
-        "doc": "Pull S&P 500 constituent membership (crsp.msp500list) from WRDS",
+
+def task_pull_sp500_constituents():
+    """Pull S&P 500 constituent membership (crsp.msp500list) from WRDS."""
+    return {
         "actions": [
             "python ./src/settings.py",
             "python ./src/pull_sp500.py",
@@ -111,9 +110,10 @@ def task_pull():
         "clean": [],
     }
 
-    yield {
-        "name": "crsp_optionm_link",
-        "doc": "Pull the CRSP-OptionMetrics link table (opcrsphist) from WRDS",
+
+def task_pull_crsp_optionm_link():
+    """Pull the CRSP-OptionMetrics link table (opcrsphist) from WRDS."""
+    return {
         "actions": [
             "python ./src/settings.py",
             "python ./src/pull_link.py",
@@ -123,9 +123,10 @@ def task_pull():
         "clean": [],
     }
 
-    yield {
-        "name": "optionmetrics",
-        "doc": "Pull OptionMetrics surface/rates/security file for the secid universe + ETFs",
+
+def task_pull_optionmetrics():
+    """Pull OptionMetrics surface/rates/security files for the secid universe + ETFs."""
+    return {
         "actions": [
             "python ./src/settings.py",
             "python ./src/pull_optionmetrics.py",
@@ -147,7 +148,7 @@ def task_pull():
     }
 
 
-def task_build_sp500_secid_universe():
+def task_build_secid_universe():
     """Build the month-end S&P 500 constituent secid universe (Slice 2).
 
     Expands index membership onto the last NYSE trading day of each month and
@@ -193,7 +194,7 @@ def task_build_realized_returns():
     }
 
 
-def task_rates():
+def task_clean_rates():
     """Clean the OptionMetrics zero curve into rates.parquet (Slice 1)."""
     return {
         "actions": ["python ./src/rates.py"],
@@ -229,7 +230,7 @@ def task_clean_surface():
     }
 
 
-def task_summary_stats():
+def task_example_exhibits():
     """Generate the placeholder example exhibits for the report template.
 
     Self-contained synthetic table + figure (no external data); the real
