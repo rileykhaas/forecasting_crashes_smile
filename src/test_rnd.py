@@ -91,9 +91,7 @@ def test_inverse_round_trips_through_cdf(flat_vol_slice):
 @pytest.mark.parametrize("threshold_q", schema.THRESHOLDS_Q)
 def test_risk_neutral_crash_prob_matches_direct_cdf_call(flat_vol_slice, threshold_q):
     cdf = risk_neutral_cdf(flat_vol_slice, RATE)
-    assert risk_neutral_crash_prob(cdf, threshold_q) == pytest.approx(
-        cdf(threshold_q)
-    )
+    assert risk_neutral_crash_prob(cdf, threshold_q) == pytest.approx(cdf(threshold_q))
 
 
 def test_risk_neutral_crash_prob_matches_lognormal_closed_form(flat_vol_slice):

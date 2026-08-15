@@ -99,9 +99,7 @@ def clean_surface(raw_surface, spot_by_month):
 
     # Criteria 2 & 3: positive strike; dispersion strictly inside (0, 0.05).
     df = df[
-        (df["impl_strike"] > 0)
-        & (df["dispersion"] > 0)
-        & (df["dispersion"] < 0.05)
+        (df["impl_strike"] > 0) & (df["dispersion"] > 0) & (df["dispersion"] < 0.05)
     ]
 
     # Criterion 1: a CRSP spot must exist -> inner join drops firm-months without one.
@@ -109,7 +107,9 @@ def clean_surface(raw_surface, spot_by_month):
     df = df.merge(spot_by_month, on=["secid", "ym"], how="inner")
 
     df["moneyness"] = df["impl_strike"] / df["spot_price"]
-    df = df.rename(columns={"days": "days_to_maturity", "impl_volatility": "implied_vol"})
+    df = df.rename(
+        columns={"days": "days_to_maturity", "impl_volatility": "implied_vol"}
+    )
 
     # Criterion 4: keep firm-month-maturities with more than 10 distinct strikes.
     n_strikes = df.groupby(["date", "secid", "days_to_maturity"])[
