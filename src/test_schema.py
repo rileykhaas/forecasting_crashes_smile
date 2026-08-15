@@ -23,6 +23,7 @@ def _valid_frame(table):
             "moneyness": np.array([0.9, 1.0], dtype="float64"),
             "implied_vol": np.array([0.25, 0.20], dtype="float64"),
             "spot_price": np.array([3200.0, 3100.0], dtype="float64"),
+            "cp_flag": np.array(["P", "C"]),
         },
         "rates": {
             "date": pd.to_datetime(["2020-01-31", "2020-01-31"]),
