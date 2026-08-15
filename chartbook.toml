@@ -96,6 +96,21 @@ tags = ["OptionMetrics", "secid", "universe", "sector ETF", "extension"]
 path = "./_data/optionm_pull_secids.parquet"
 docs_path = "./docs_src/dataframes/optionm_pull_secids.md"
 
+[dataframes.realized_returns]
+name = "Realized Forward Returns"
+description = "Gross forward returns R_{t->t+tau} per (date, secid, horizon), from CRSP monthly returns with delisting folded in (CIZ mthret). Threshold-independent: stores the realized return itself, not a crash flag. The realized outcome the option-implied crash bounds are tested against."
+sources = ["CRSP", "WRDS CRSP-OptionMetrics Link"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from CRSP via WRDS — subscription required; not redistributable."
+restrictions = "Cleaned output; lives in gitignored _data/. Regenerate with `doit build_realized_returns`."
+pull_method = "realized_returns.py: rolling h-month gross-return product from the CRSP monthly file, keyed by secid via the date-valid best-score CRSP-OptionMetrics link; scoped to the analysis universe (optionm_pull_secids)"
+tags = ["CRSP", "realized returns", "forward returns", "crash", "cleaned"]
+date_col = "date"
+path = "./_data/realized_returns.parquet"
+docs_path = "./docs_src/dataframes/realized_returns.md"
+
 
 [charts]
 
