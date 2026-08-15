@@ -183,9 +183,11 @@ def task_build_realized_returns():
             "./src/realized_returns.py",
             "./src/pull_CRSP_stock.py",
             "./src/pull_link.py",
+            "./src/pull_optionmetrics.py",
             "./src/schema.py",
             DATA_DIR / "CRSP_monthly_stock.parquet",
             DATA_DIR / "crsp_optionm_link.parquet",
+            DATA_DIR / "optionm_pull_secids.parquet",
         ],
         "clean": [],
     }

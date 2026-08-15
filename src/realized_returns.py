@@ -25,7 +25,7 @@ from sp500_secid_universe import month_end_trading_days
 DATA_DIR = Path(config("DATA_DIR"))
 
 
-def build_realized_returns(crsp_monthly, link_table):
+def build_realized_returns(crsp_monthly, link_table, universe_secids=None):
     """Compute gross forward returns and key them by secid.
 
     Parameters
@@ -37,10 +37,23 @@ def build_realized_returns(crsp_monthly, link_table):
     link_table : DataFrame
         Output of ``pull_link.pull_crsp_optionm_link``
         (secid, permno, score, sdate, edate).
+    universe_secids : iterable of int, optional
+        If given, restrict to these secids (the analysis universe, e.g.
+        optionm_pull_secids). The link is pre-filtered to them and CRSP to the
+        permnos they map to, so the expensive rolling products run only over the
+        names actually studied (~1.2k) rather than all of CRSP (~20k). Leaving it
+        None keeps every linked secid.
 
     Returns a DataFrame conforming to schema.SCHEMAS["realized_returns"]:
     columns [date, secid, horizon_months, realized_gross_return].
     """
+    # 0) Optionally scope to the analysis universe up front.
+    if universe_secids is not None:
+        keep = {int(s) for s in universe_secids}
+        link_table = link_table[link_table["secid"].isin(keep)]
+        keep_permnos = set(link_table["permno"].unique())
+        crsp_monthly = crsp_monthly[crsp_monthly["permno"].isin(keep_permnos)]
+
     # 1) One row per (permno, month) with the gross monthly return.
     monthly = crsp_monthly[["permno", "date", "ret"]].dropna(subset=["ret"]).copy()
     monthly["date"] = pd.to_datetime(monthly["date"])
@@ -118,9 +131,11 @@ def build_realized_returns(crsp_monthly, link_table):
 if __name__ == "__main__":
     from pull_CRSP_stock import load_CRSP_monthly_file
     from pull_link import load_crsp_optionm_link
+    from pull_optionmetrics import load_option_pull_secids
 
     crsp_monthly = load_CRSP_monthly_file()
     link_table = load_crsp_optionm_link()
-    df = build_realized_returns(crsp_monthly, link_table)
+    universe = load_option_pull_secids()["secid"]
+    df = build_realized_returns(crsp_monthly, link_table, universe_secids=universe)
     schema.validate_schema(df, "realized_returns")
     df.to_parquet(DATA_DIR / "realized_returns.parquet")
