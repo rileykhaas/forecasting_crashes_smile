@@ -25,10 +25,10 @@ DATA_DIR = config("DATA_DIR")
 MANUAL_DATA_DIR = config("MANUAL_DATA_DIR")
 OUTPUT_DIR = config("OUTPUT_DIR")
 OS_TYPE = config("OS_TYPE")
-USER = config("USER")
 
 ## Helpers for handling Jupyter Notebook tasks
 environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
+
 
 # fmt: off
 ## Helper functions for automatic execution of Jupyter notebooks
@@ -230,21 +230,26 @@ def task_clean_surface():
 
 
 def task_summary_stats():
-    """Generate summary statistics tables"""
-    file_dep = ["./src/example_table.py"]
-    file_output = [
-        "example_table.tex",
-        "pandas_to_latex_simple_table1.tex",
+    """Generate the placeholder example exhibits for the report template.
+
+    Self-contained synthetic table + figure (no external data); the real
+    exhibits (#33 / E5 / E6) will replace these.
+    """
+    scripts = [
+        "./src/example_table.py",
+        "./src/pandas_to_latex_demo.py",
+        "./src/example_plot.py",
     ]
-    targets = [OUTPUT_DIR / file for file in file_output]
+    targets = [
+        OUTPUT_DIR / "example_table.tex",
+        OUTPUT_DIR / "pandas_to_latex_simple_table1.tex",
+        OUTPUT_DIR / "example_plot.png",
+    ]
 
     return {
-        "actions": [
-            "python ./src/example_table.py",
-            "python ./src/pandas_to_latex_demo.py",
-        ],
+        "actions": [f"python {script}" for script in scripts],
         "targets": targets,
-        "file_dep": file_dep,
+        "file_dep": scripts,
         "clean": True,
     }
 
@@ -332,6 +337,7 @@ def task_compile_latex_docs():
         "clean": True,
     }
 
+
 sphinx_targets = [
     "./docs/index.html",
 ]
@@ -340,8 +346,7 @@ sphinx_targets = [
 def task_build_chartbook_site():
     """Compile Sphinx Docs"""
     notebook_scripts = [
-        Path(notebook_tasks[notebook]["path"])
-        for notebook in notebook_tasks.keys()
+        Path(notebook_tasks[notebook]["path"]) for notebook in notebook_tasks.keys()
     ]
     file_dep = [
         "./README.md",
