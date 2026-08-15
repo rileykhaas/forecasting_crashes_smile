@@ -103,3 +103,22 @@ def test_risk_neutral_crash_prob_matches_lognormal_closed_form(flat_vol_slice):
         assert risk_neutral_crash_prob(cdf, threshold_q) == pytest.approx(
             expected, abs=2e-3
         )
+
+
+@pytest.mark.parametrize(
+    "days, expected_L", [(30, 3.0), (91, 3.0), (182, 3.0), (365, 5.0)]
+)
+def test_grid_spans_paper_moneyness_range(days, expected_L):
+    """The fine grid is fixed to K/S in [1/L, L] (Appendix D: L=3, or 5 at 12m)."""
+    slice_ = _surface_slice(
+        np.linspace(0.7, 1.3, 15), np.full(15, 0.25), days_to_maturity=days
+    )
+    cdf = risk_neutral_cdf(slice_, RATE)
+    assert cdf.grid.min() == pytest.approx(1.0 / expected_L)
+    assert cdf.grid.max() == pytest.approx(expected_L)
+
+
+def test_percent_rate_is_rejected(flat_vol_slice):
+    """A percent rate (e.g. 3.0) is caught, not silently mispriced as r=300%."""
+    with pytest.raises(ValueError, match="decimal"):
+        risk_neutral_cdf(flat_vol_slice, 3.0)
