@@ -136,6 +136,50 @@ def test_percent_rate_is_rejected(flat_vol_slice):
         risk_neutral_cdf(flat_vol_slice, 3.0)
 
 
+@pytest.mark.parametrize("q_low, q_high", [(0.70, 0.80), (0.80, 0.90), (0.90, 1.00)])
+def test_crash_prob_is_monotone_in_threshold(flat_vol_slice, q_low, q_high):
+    """Property: P*[R<=q] can only rise (or stay flat) as q rises."""
+    cdf = risk_neutral_cdf(flat_vol_slice, RATE)
+    assert risk_neutral_crash_prob(cdf, q_low) <= risk_neutral_crash_prob(cdf, q_high)
+
+
+def test_crash_prob_is_monotone_in_horizon():
+    """Property: for a fixed sub-100% threshold, a longer horizon gives the
+    price more time to drift below it, so P*[R<=q] should rise with maturity
+    (true for a lognormal-type distribution once q is below the current
+    price, which every threshold in schema.THRESHOLDS_Q is).
+    """
+    moneyness = np.linspace(0.5, 1.5, 9)
+    probs = []
+    for days in schema.MATURITIES_DAYS:
+        slice_ = _surface_slice(moneyness, np.full_like(moneyness, 0.25), days_to_maturity=days)
+        cdf = risk_neutral_cdf(slice_, RATE)
+        probs.append(risk_neutral_crash_prob(cdf, 0.80))
+    assert probs == sorted(probs)
+
+
+def test_degenerate_surface_with_only_two_points():
+    """The smallest possible smile (one OTM put, one OTM call) still yields
+    a valid, monotone CDF -- no crash on a thin/illiquid name.
+    """
+    slice_ = _surface_slice([0.9, 1.1], [0.25, 0.25])
+    cdf = risk_neutral_cdf(slice_, RATE)
+    assert np.all(np.diff(cdf.values) >= 0)
+    assert cdf.values.min() >= 0.0
+    assert cdf.values.max() <= 1.0
+
+
+def test_degenerate_surface_with_narrow_moneyness_cluster():
+    """A smile bunched tightly around the money (no real tail coverage) must
+    still produce a valid CDF, not NaNs or an exception.
+    """
+    moneyness = np.linspace(0.98, 1.02, 5)
+    slice_ = _surface_slice(moneyness, np.full_like(moneyness, 0.25))
+    cdf = risk_neutral_cdf(slice_, RATE)
+    assert np.all(np.isfinite(cdf.values))
+    assert np.all(np.diff(cdf.values) >= 0)
+
+
 def test_itm_side_is_ignored_even_with_garbage_vol():
     """The ITM side of each strike must not influence the fitted smile at all.
 

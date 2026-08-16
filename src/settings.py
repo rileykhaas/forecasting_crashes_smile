@@ -29,13 +29,13 @@ print(f"Using DATA_DIR: {DATA_DIR}")
 ```
 and run
 ```
->>> python myexample.py --DATA_DIR=/path/to/data
+$ python myexample.py --DATA_DIR=/path/to/data
 /path/to/data
 ```
 and compare to
 ```
->>> export DATA_DIR=/path/to/other
->>> python myexample.py
+$ export DATA_DIR=/path/to/other
+$ python myexample.py
 /path/to/other
 ```
 
@@ -68,14 +68,15 @@ def find_all_caps_cli_vars(argv=sys.argv):
     For example:
     ```
     >>> argv = [
-        '/opt/homebrew/Caskroom/mambaforge/base/envs/ftsf/lib/python3.12/site-packages/ipykernel_launcher.py',
-        '--f=/Users/jbejarano/Library/Jupyter/runtime/kernel-v37ea18e94713e364855d5610175b766ee99909eab.json',
-        '--DATA_DIR=/path/to/data',
-        '--MANUAL_DATA_DIR=/path/to/manual_data'
-    ]
+    ...     '/opt/homebrew/Caskroom/mambaforge/base/envs/ftsf/lib/python3.12/site-packages/ipykernel_launcher.py',
+    ...     '--f=/Users/jbejarano/Library/Jupyter/runtime/kernel-v37ea18e94713e364855d5610175b766ee99909eab.json',
+    ...     '--DATA_DIR=/path/to/data',
+    ...     '--MANUAL_DATA_DIR=/path/to/manual_data'
+    ... ]
     >>> cli_vars = find_all_caps_cli_vars(argv)
     >>> cli_vars
     {'DATA_DIR': '/path/to/data', 'MANUAL_DATA_DIR': '/path/to/manual_data'}
+
     ```
     """
     result = {}
@@ -159,15 +160,14 @@ def if_relative_make_abs(path):
     """If a relative path is given, make it absolute, assuming
     that it is relative to the project root directory (BASE_DIR)
 
-    Example
-    -------
-    ```
-    >>> if_relative_make_abs(Path('_data'))
-    WindowsPath('C:/Users/jdoe/GitRepositories/cookiecutter_chartbook/_data')
-
-    >>> if_relative_make_abs(Path("C:/Users/jdoe/GitRepositories/cookiecutter_chartbook/_output"))
-    WindowsPath('C:/Users/jdoe/GitRepositories/cookiecutter_chartbook/_output')
-    ```
+    Examples
+    --------
+    >>> if_relative_make_abs(Path('_data')).is_absolute()
+    True
+    >>> if_relative_make_abs(Path('_data')).name
+    '_data'
+    >>> if_relative_make_abs(Path('_data')) == if_relative_make_abs(Path('_data')).resolve()
+    True
     """
     path = Path(path)
     if path.is_absolute():

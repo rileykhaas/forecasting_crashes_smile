@@ -70,6 +70,29 @@ def risk_neutral_cdf(surface_slice, rate, n_grid=N_GRID):
         stores it in percent, so divide by 100 before calling this.
 
     Returns a RiskNeutralCDF: monotone, non-decreasing, in [0, 1].
+
+    Examples
+    --------
+    A flat 25% vol smile over 30 days: near-zero probability of a 20% drop,
+    roughly a coin flip of ending below today's price.
+
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> moneyness = np.linspace(0.5, 1.5, 9)
+    >>> surface = pd.DataFrame({
+    ...     "date": pd.Timestamp("2020-01-31"),
+    ...     "secid": 108105,
+    ...     "days_to_maturity": 30,
+    ...     "moneyness": moneyness,
+    ...     "implied_vol": 0.25,
+    ...     "spot_price": 100.0,
+    ...     "cp_flag": np.where(moneyness <= 1.0, "P", "C"),
+    ... })
+    >>> cdf = risk_neutral_cdf(surface, rate=0.03)
+    >>> round(float(cdf(1.00)), 4)
+    0.5006
+    >>> round(float(cdf(0.80)), 4)
+    0.0009
     """
     if abs(rate) >= 1.0:
         raise ValueError(
