@@ -128,6 +128,11 @@ def build_realized_returns(crsp_monthly, link_table, universe_secids=None):
     return result
 
 
+def load_realized_returns(data_dir=DATA_DIR):
+    """Load the cached realized_returns.parquet back from DATA_DIR."""
+    return pd.read_parquet(Path(data_dir) / "realized_returns.parquet")
+
+
 if __name__ == "__main__":
     from pull_CRSP_stock import load_CRSP_monthly_file
     from pull_link import load_crsp_optionm_link
