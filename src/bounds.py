@@ -48,4 +48,4 @@ def crash_bounds(cdf_i, cdf_m, rate, threshold_q):
     bound_lower = weighted_tail_expectation(cdf_m, rate, q_l, tail="lower") / denom
     bound_upper = weighted_tail_expectation(cdf_m, rate, q_u, tail="upper") / denom
 
-    return bound_lower, prob_riskneutral, bound_upper
+    return float(bound_lower), prob_riskneutral, float(bound_upper)
