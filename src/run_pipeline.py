@@ -52,12 +52,17 @@ def run_pipeline(clean_surface, rates, realized_returns):
     rows = []
     for (secid, date, days), (cdf_i, rate) in cdfs.items():
         horizon = DAYS_TO_HORIZON.get(days)
-        if horizon is None or secid == schema.SPX_SECID:
+        if horizon is None:
             continue
         market = cdfs.get((schema.SPX_SECID, date, days))
         if market is None:
             continue
         cdf_m, _ = market
+        # The index itself gets a row: when secid == SPX_SECID, cdf_i is cdf_m,
+        # which is the i = m case of Result 3. The lower bound then holds with
+        # equality and equals the market crash probability of eq. (7) -- the
+        # gray line in Figure 2 and the basis for the gamma calibration. No
+        # special-casing needed; crash_bounds handles i = m directly.
         for threshold_q in schema.THRESHOLDS_Q:
             bound_lower, prob_riskneutral, bound_upper = crash_bounds(
                 cdf_i, cdf_m, rate, threshold_q
