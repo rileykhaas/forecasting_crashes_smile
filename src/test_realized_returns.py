@@ -9,13 +9,19 @@ date-valid best-score secid join.
 import pandas as pd
 
 import schema
-from realized_returns import build_realized_returns
+from realized_returns import build_index_realized_returns, build_realized_returns
 
 
 def _crsp(permno, rets, start="2020-01-31"):
     """CRSP-style monthly frame: one permno, consecutive month-ends, given rets."""
     dates = pd.date_range(start, periods=len(rets), freq="ME")
     return pd.DataFrame({"permno": permno, "date": dates, "ret": rets})
+
+
+def _msix(sprtrn, start="2020-01-31"):
+    """CRSP index (msix)-style monthly frame: month-ends + S&P 500 price return."""
+    dates = pd.date_range(start, periods=len(sprtrn), freq="ME")
+    return pd.DataFrame({"caldt": dates, "sprtrn": sprtrn, "spindx": 100.0})
 
 
 def _link(rows):
@@ -79,4 +85,23 @@ def test_schema_conforms():
     crsp = _crsp(1, [0.05, 0.05, 0.05, 0.05])
     link = _link([(500, 1, 1, "2019-01-01", "2025-01-01")])
     out = build_realized_returns(crsp, link)
+    assert schema.validate_schema(out, "realized_returns")
+
+
+def test_index_forward_gross_compounding_uses_price_return():
+    """The index return is the compounded S&P 500 *price* return (sprtrn), keyed
+    under SPX_SECID (the i = m case of Result 3)."""
+    # sprtrn by month: Jan .05, Feb -.20, Mar .00, Apr .50, ...
+    out = build_index_realized_returns(_msix([0.05, -0.20, 0.00, 0.50, 0.10, 0.00]))
+    assert set(out.secid.unique()) == {schema.SPX_SECID}
+
+    first_1m = out[out.horizon_months == 1].sort_values("date").iloc[0]
+    assert abs(first_1m.realized_gross_return - 0.80) < 1e-9  # Jan -> Feb: 1 + (-0.20)
+
+    first_3m = out[out.horizon_months == 3].sort_values("date").iloc[0]
+    assert abs(first_3m.realized_gross_return - 0.80 * 1.00 * 1.50) < 1e-9
+
+
+def test_index_schema_conforms():
+    out = build_index_realized_returns(_msix([0.05, -0.10, 0.02, 0.03, 0.01, 0.0]))
     assert schema.validate_schema(out, "realized_returns")
