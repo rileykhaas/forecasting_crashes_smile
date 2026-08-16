@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crashbounds"
+version = "0.1.0"
+description = "Option-implied crash-probability bounds (Martin & Shi, 2025)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "scikit-learn",
+    "wrds",
+    "matplotlib",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
