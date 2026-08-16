@@ -230,6 +230,30 @@ def task_clean_surface():
     }
 
 
+def task_pipeline():
+    """Run A1-A5 end to end into results.parquet (Appendix D bounds).
+
+    Combines clean_surface + rates (Slice 1) with realized_returns (Slice 2)
+    through the engine (rnd.py, utility_correction.py, bounds.py) to produce
+    the P^L / P* / P^U + realized-outcome table every figure/table reads from.
+    """
+    return {
+        "actions": ["python ./src/run_pipeline.py"],
+        "targets": [OUTPUT_DIR / "results.parquet"],
+        "file_dep": [
+            "./src/run_pipeline.py",
+            "./src/rnd.py",
+            "./src/utility_correction.py",
+            "./src/bounds.py",
+            "./src/schema.py",
+            DATA_DIR / "clean_surface.parquet",
+            DATA_DIR / "rates.parquet",
+            DATA_DIR / "realized_returns.parquet",
+        ],
+        "clean": [],
+    }
+
+
 def task_example_exhibits():
     """Generate the placeholder example exhibits for the report template.
 
