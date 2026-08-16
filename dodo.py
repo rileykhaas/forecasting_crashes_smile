@@ -174,8 +174,10 @@ def task_build_realized_returns():
 
     Computes gross forward returns for each horizon in schema.HORIZONS_MONTHS
     from the CRSP monthly file (delisting returns folded into mthret), and
-    attaches the OptionMetrics secid via the CRSP-OptionMetrics link. Depends
-    on the CRSP stock pull and the link table pull.
+    attaches the OptionMetrics secid via the CRSP-OptionMetrics link. The S&P 500
+    index itself is added from the CRSP index file (msix) under SPX_SECID, so its
+    i = m crash bound has a realized outcome. Depends on the CRSP stock and index
+    pulls and the link table pull.
     """
     return {
         "actions": ["python ./src/realized_returns.py"],
@@ -187,6 +189,7 @@ def task_build_realized_returns():
             "./src/pull_optionmetrics.py",
             "./src/schema.py",
             DATA_DIR / "CRSP_monthly_stock.parquet",
+            DATA_DIR / "CRSP_MSIX.parquet",
             DATA_DIR / "crsp_optionm_link.parquet",
             DATA_DIR / "optionm_pull_secids.parquet",
         ],
