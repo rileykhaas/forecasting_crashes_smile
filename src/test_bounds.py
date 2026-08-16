@@ -185,3 +185,32 @@ def test_crash_bounds_ordering_holds_with_smile(smile_slice, flat_vol_35_name, t
         }
     )
     assert schema.check_bound_ordering(results)
+
+
+def test_crash_bounds_are_monotone_in_horizon():
+    """Property: for a fixed sub-100% threshold, both bounds should rise (or
+    stay flat) as the horizon lengthens -- same intuition as P* itself
+    (test_crash_prob_is_monotone_in_horizon in test_rnd.py), just carried
+    through the Frechet-Hoeffding bounds.
+    """
+    lowers, uppers = [], []
+    for days in schema.MATURITIES_DAYS:
+        cdf_m = _surface_slice(np.linspace(0.5, 1.5, 25), np.full(25, 0.20), days_to_maturity=days, secid=schema.SPX_SECID)
+        cdf_i = _surface_slice(np.linspace(0.5, 1.5, 25), np.full(25, 0.35), days_to_maturity=days, secid=5001)
+        bound_lower, _, bound_upper = crash_bounds(
+            risk_neutral_cdf(cdf_i, RATE), risk_neutral_cdf(cdf_m, RATE), RATE, 0.80
+        )
+        lowers.append(bound_lower)
+        uppers.append(bound_upper)
+    assert lowers == sorted(lowers)
+    assert uppers == sorted(uppers)
+
+
+def test_crash_bounds_degenerate_two_point_smile():
+    """The thinnest possible smile (one OTM put, one OTM call) on both sides
+    still yields a valid, ordered triple -- no crash on illiquid names.
+    """
+    cdf_m = risk_neutral_cdf(_surface_slice([0.9, 1.1], [0.20, 0.20], secid=schema.SPX_SECID), RATE)
+    cdf_i = risk_neutral_cdf(_surface_slice([0.9, 1.1], [0.35, 0.35], secid=5001), RATE)
+    bound_lower, prob_riskneutral, bound_upper = crash_bounds(cdf_i, cdf_m, RATE, 0.80)
+    assert bound_lower <= prob_riskneutral <= bound_upper

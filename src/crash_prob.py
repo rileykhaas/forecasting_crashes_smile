@@ -7,5 +7,14 @@ is simply P*[R_i <= q] = Q_i(q). This is the P^* column and also the naive
 
 
 def risk_neutral_crash_prob(cdf_i, threshold_q):
-    """Return P*[R_i <= q] by evaluating the individual-name CDF at q."""
+    """Return P*[R_i <= q] by evaluating the individual-name CDF at q.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from rnd import RiskNeutralCDF
+    >>> cdf = RiskNeutralCDF(np.array([0.5, 1.0, 1.5]), np.array([0.0, 0.5, 1.0]))
+    >>> risk_neutral_crash_prob(cdf, 0.75)
+    0.25
+    """
     return cdf_i(threshold_q)

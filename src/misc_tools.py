@@ -44,7 +44,7 @@ def df_to_literal(df, missing_value="None"):
     df = pd.DataFrame(
     {
         'Name': ['Alice', 'Bob', None],
-        'Age': [25, None, 35],
+        'Age': [25.0, None, 35.0],
         'City': ['New York', 'Los Angeles', 'Chicago']
     }, index=['a', 'b', 'c']
     )
@@ -287,8 +287,8 @@ def groupby_weighted_average(
     ... )
     >>> groupby_weighted_average(data=df_nccb, data_col='rate', weight_col='start_leg_amount', by_col='trade_direction')
     trade_direction
-    DELIVERED   2.00
-    RECEIVED    2.67
+    DELIVERED    2.000000
+    RECEIVED     2.666667
     dtype: float64
 
     ```
@@ -331,8 +331,8 @@ def groupby_weighted_std(
     ... )
     >>> groupby_weighted_std(data=df_nccb, data_col='rate', weight_col='start_leg_amount', by_col='trade_direction', ddof=1)
     trade_direction
-    DELIVERED   0.50
-    RECEIVED    0.00
+    DELIVERED    0.5
+    RECEIVED     0.0
     dtype: float64
     >>> np.std([2,2,2,3], ddof=1)
     0.5
@@ -340,8 +340,8 @@ def groupby_weighted_std(
     0.0
     >>> groupby_weighted_std(data=df_nccb, data_col='rate', weight_col='start_leg_amount', by_col='trade_direction', ddof=0)
     trade_direction
-    DELIVERED   0.43
-    RECEIVED    0.00
+    DELIVERED    0.433013
+    RECEIVED     0.000000
     dtype: float64
     >>> np.std([2,2,2,3])
     0.4330127018922193
@@ -535,14 +535,14 @@ def with_lagged_columns(
     >>> df_lag
       id       date  value  L1_value
     0  A 1990-01-01      1       NaN
-    1  A 1990-02-01      2      1.00
-    2  A 1990-03-01      3      2.00
+    1  A 1990-02-01      2       1.0
+    2  A 1990-03-01      3       2.0
     3  B 1989-12-01     12       NaN
-    4  B 1990-01-01      1     12.00
-    5  B 1990-02-01      2      1.00
-    6  B 1990-03-01      3      2.00
-    7  B 1990-04-01      4      3.00
-    8  B 1990-06-01      6      4.00
+    4  B 1990-01-01      1      12.0
+    5  B 1990-02-01      2       1.0
+    6  B 1990-03-01      3       2.0
+    7  B 1990-04-01      4       3.0
+    8  B 1990-06-01      6       4.0
 
     The issue with leaving out the resample is that the lagged value
     for 1990-06-01 is 4.0, but it should be NaN. This is because the
@@ -553,17 +553,17 @@ def with_lagged_columns(
     >>> df_lag = with_lagged_columns(df=df, column_to_lag='value', id_column='id', lags=1, freq="MS", resample=True)
     >>> df_lag
        id       date  value  L1_value
-    2   A 1990-01-01   1.00       NaN
-    4   A 1990-02-01   2.00      1.00
-    6   A 1990-03-01   3.00      2.00
-    8   A 1990-04-01    NaN      3.00
-    1   B 1989-12-01  12.00       NaN
-    3   B 1990-01-01   1.00     12.00
-    5   B 1990-02-01   2.00      1.00
-    7   B 1990-03-01   3.00      2.00
-    9   B 1990-04-01   4.00      3.00
-    11  B 1990-05-01    NaN      4.00
-    13  B 1990-06-01   6.00       NaN
+    2   A 1990-01-01    1.0       NaN
+    4   A 1990-02-01    2.0       1.0
+    6   A 1990-03-01    3.0       2.0
+    8   A 1990-04-01    NaN       3.0
+    1   B 1989-12-01   12.0       NaN
+    3   B 1990-01-01    1.0      12.0
+    5   B 1990-02-01    2.0       1.0
+    7   B 1990-03-01    3.0       2.0
+    9   B 1990-04-01    4.0       3.0
+    11  B 1990-05-01    NaN       4.0
+    13  B 1990-06-01    6.0       NaN
 
     ```
 
