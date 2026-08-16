@@ -1,72 +1,55 @@
 """A1: Risk-neutral density via Breeden-Litzenberger.
 
-Turns a cleaned volatility surface (for one date x secid x maturity) into the
-risk-neutral CDF Q(.) of the gross return, following Breeden & Litzenberger
-(1978) and the construction in Appendix D: select the out-of-the-money side of
-each put/call pair (K <= S*Rf uses puts, K > S*Rf uses calls, Rf = e^{r tau}),
-build Black-Scholes prices on a fine strike grid, take the relevant gradients
-to recover the marginal CDF, fit an isotonic regression to enforce
-monotonicity, and winsorize into [0, 1].
+Builds the risk-neutral CDF of a name's gross return from its cleaned vol
+surface (Appendix D): pick the out-of-the-money side of each strike, price
+it with Black-Scholes on a fine grid, differentiate to get the CDF, then fit
+an isotonic regression and clip to [0, 1] so it's a valid CDF.
 
-Consumes clean_surface + rates. Produces the marginals Q_m (index) and Q_i
-(individual name) used everywhere downstream.
-
-Strikes are handled entirely in moneyness terms, k = K / S_0 (schema's
-``moneyness`` column), so the gross return R = S_T / S_0 and a strike are the
-same variable and no dollar-denominated spot conversion is ever needed here:
-a call priced with spot normalized to 1 has price C(k) = e^{-rT} E*[(R-k)^+],
-and Breeden-Litzenberger gives Q(k) = P*[R <= k] = 1 + e^{rT} dC/dk.
+Strikes are handled in moneyness terms (k = K / S_0), so a strike and a
+gross-return level are the same number and no spot conversion is needed.
 """
 
 import numpy as np
 from scipy.stats import norm
 from sklearn.isotonic import IsotonicRegression
 
-# Number of uniform steps in the fine moneyness grid used to numerically
-# differentiate the call-price curve (Appendix D uses 2000).
-N_GRID = 2000
+N_GRID = 2000  # steps in the fine moneyness grid, per Appendix D
 
 
 def _grid_half_width(days_to_maturity):
-    """Moneyness grid half-width L; the grid spans K/S in [1/L, L].
-
-    Appendix D uses L = 3 for the 1/3/6-month horizons and L = 5 for 12 months.
-    """
+    """Grid spans K/S in [1/L, L]. Appendix D: L=3 up to 6 months, L=5 at 12."""
     return 5.0 if days_to_maturity >= 365 else 3.0
 
 
 class RiskNeutralCDF:
     """A monotone risk-neutral CDF Q(.) of the gross return R = S_T / S_0.
 
-    Represented on a fixed grid of gross-return levels (``grid``, increasing)
-    with corresponding CDF values (``values``, non-decreasing, in [0, 1]).
-    Callable at any gross-return level(s) via linear interpolation between
-    grid points; ``inverse`` does the same on the swapped axes to recover
-    Q^{-1}(p), which the Frechet-Hoeffding bounds (A4) apply to the index CDF.
+    Stored on a fixed grid of gross-return levels with matching CDF values.
+    Call it like a function to evaluate Q(q); use ``inverse`` for Q^-1(p).
+
+    Also keeps ``call_grid`` (the priced call curve) and ``maturity_years``,
+    which utility_correction.py needs to compute Result 5's moments directly
+    from option prices instead of the CDF.
     """
 
-    def __init__(self, grid, values):
+    def __init__(self, grid, values, call_grid=None, maturity_years=None):
         self.grid = np.asarray(grid, dtype=float)
         self.values = np.asarray(values, dtype=float)
+        self.call_grid = None if call_grid is None else np.asarray(call_grid, dtype=float)
+        self.maturity_years = maturity_years
 
     def __call__(self, q):
-        """Evaluate Q(q) for scalar or array-like gross-return level(s) q."""
         return np.interp(q, self.grid, self.values)
 
     def inverse(self, p):
-        """Return Q^{-1}(p): the gross-return level where the CDF equals p.
-
-        Flat regions in ``values`` (from clipping/isotonic ties) are not
-        invertible pointwise, so only the first grid point attaining each
-        CDF level is kept before interpolating.
-        """
+        """Q^-1(p): the gross-return level where the CDF equals p."""
         values, first_idx = np.unique(self.values, return_index=True)
         grid = self.grid[first_idx]
         return np.interp(p, values, grid)
 
 
 def _black_scholes_call(moneyness, vol, maturity_years, rate):
-    """Black-Scholes call price with spot normalized to 1, i.e. C(k)/S_0."""
+    """Black-Scholes call price with spot normalized to 1."""
     k = np.asarray(moneyness, dtype=float)
     sqrt_t = np.sqrt(maturity_years)
     d1 = (-np.log(k) + (rate + 0.5 * vol**2) * maturity_years) / (vol * sqrt_t)
@@ -80,22 +63,14 @@ def risk_neutral_cdf(surface_slice, rate, n_grid=N_GRID):
     Parameters
     ----------
     surface_slice : DataFrame
-        Rows of schema.SCHEMAS['clean_surface'] for a single (date, secid,
-        days_to_maturity) -- i.e. one smile, BOTH put and call quotes. Must
-        have a ``cp_flag`` column ('P'/'C') and at least two distinct OTM
-        ``moneyness`` points after the filter below.
+        Rows of schema.SCHEMAS['clean_surface'] for one smile, both put and
+        call quotes. Needs a ``cp_flag`` column ('P'/'C').
     rate : float
-        Continuously-compounded annualized zero rate for this maturity, as a
-        DECIMAL (0.03 = 3%). NOTE: rates.parquet's ``zero_rate`` is in percentage
-        points, so the pipeline must divide it by 100 before calling this.
+        Zero rate for this maturity, as a decimal (0.03 = 3%). rates.parquet
+        stores it in percent, so divide by 100 before calling this.
 
-    Returns
-    -------
-    RiskNeutralCDF
-        Evaluable on a gross-return grid; monotone non-decreasing, in [0, 1].
+    Returns a RiskNeutralCDF: monotone, non-decreasing, in [0, 1].
     """
-    # Guard the rate-unit contract: fail loud rather than silently pricing with
-    # r = 300% if a percent value slips through from rates.parquet.
     if abs(rate) >= 1.0:
         raise ValueError(
             f"rate must be a decimal fraction (e.g. 0.03 for 3%), got {rate!r}; "
@@ -105,13 +80,10 @@ def risk_neutral_cdf(surface_slice, rate, n_grid=N_GRID):
     days = int(surface_slice["days_to_maturity"].iloc[0])
     maturity_years = days / 365.0
 
-    # Only out-of-the-money options are used (Appendix D): puts for K <= S*Rf,
-    # calls for K > S*Rf, where Rf = e^{r tau} is the forward growth factor.
-    # clean_surface.parquet carries BOTH sides' quotes on the same moneyness
-    # axis -- put and call implied vol at similar moneyness are NOT
-    # interchangeable (they can differ sharply, especially in stress), so
-    # without this filter the two curves interleave into a single
-    # non-monotonic, effectively two-valued "smile."
+    # Keep only the OTM side of each strike (puts below the forward, calls
+    # above it). clean_surface.parquet has both sides on the same moneyness
+    # axis, and put/call vol at similar moneyness can differ sharply, so
+    # without this the "smile" isn't even single-valued.
     forward = np.exp(rate * maturity_years)
     is_otm = (
         (surface_slice["cp_flag"] == "P") & (surface_slice["moneyness"] <= forward)
@@ -121,20 +93,15 @@ def risk_neutral_cdf(surface_slice, rate, n_grid=N_GRID):
     moneyness = slice_["moneyness"].to_numpy(dtype=float)
     implied_vol = slice_["implied_vol"].to_numpy(dtype=float)
 
-    # Fine strike grid over the paper's fixed moneyness range K/S in [1/L, L]
-    # (Appendix D: L=3 for 1/3/6-month, L=5 for 12-month), with N_GRID uniform
-    # steps for the midpoint-rule integrals downstream.
     L = _grid_half_width(days)
     grid = np.linspace(1.0 / L, L, n_grid)
 
-    # Linear interpolation of implied vol between observed strikes; held flat
-    # outside the quoted range (np.interp clamps to the endpoints) -- Appendix D.
+    # Linear interpolation between observed strikes, flat outside the range.
     vol_grid = np.interp(grid, moneyness, implied_vol)
 
     call_grid = _black_scholes_call(grid, vol_grid, maturity_years, rate)
 
-    # Breeden-Litzenberger (Appendix D): C(k) = e^{-rT} E*[(R-k)^+], so
-    # dC/dk = -e^{-rT}(1 - Q(k))  =>  Q(k) = 1 + e^{rT} dC/dk.
+    # Breeden-Litzenberger: Q(k) = 1 + e^{rT} * dC/dk
     dC_dk = np.gradient(call_grid, grid)
     q_raw = 1.0 + np.exp(rate * maturity_years) * dC_dk
 
@@ -143,4 +110,4 @@ def risk_neutral_cdf(surface_slice, rate, n_grid=N_GRID):
     )
     q_fit = np.clip(isotonic.fit_transform(grid, q_raw), 0.0, 1.0)
 
-    return RiskNeutralCDF(grid, q_fit)
+    return RiskNeutralCDF(grid, q_fit, call_grid=call_grid, maturity_years=maturity_years)
