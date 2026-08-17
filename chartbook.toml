@@ -146,6 +146,35 @@ date_col = "date"
 path = "./_data/rates.parquet"
 docs_path = "./docs_src/dataframes/rates.md"
 
+[dataframes.results]
+name = "Crash-Probability Bounds (engine output)"
+description = "Per (date, secid, horizon, threshold): lower bound P^L, risk-neutral P*, upper bound P^U (Result 3), plus the realized gross return and crash flag. Includes the S&P 500 index (i = m, eq. 7). The table every figure and Table 1 reads from."
+sources = ["Derived (engine: rnd + utility_correction + bounds)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+restrictions = "Engine output; lives in gitignored _output/. Regenerate with `doit pipeline`."
+pull_method = "run_pipeline.py: per (date, maturity) build risk-neutral CDFs (rnd.py), fear-correct + Frechet-Hoeffding bounds (utility_correction.py, bounds.py), join realized_returns"
+tags = ["crash", "bounds", "risk-neutral", "replication", "engine output"]
+date_col = "date"
+path = "./_output/results.parquet"
+docs_path = "./docs_src/dataframes/results.md"
+
+[dataframes.table1]
+name = "Table 1 — Summary Statistics (replication)"
+description = "Our replication of Martin & Shi (2025) Table 1 over 1996-2022: realized crash frequency, lower/upper bounds, and risk-neutral probability, by threshold and horizon, averaged across firms (T) and across time (N). Long form."
+sources = ["Derived (exhibit_table1.py from results.parquet)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit table1`."
+pull_method = "exhibit_table1.py: results.parquet inner-joined to sp500_secid_universe (constituent member-months, 1996-2022), two-block mean/s.d. per q and horizon"
+tags = ["crash", "replication", "Table 1", "summary statistics", "exhibit"]
+path = "./_output/table1.csv"
+docs_path = "./docs_src/dataframes/table1.md"
+
 
 [charts]
 
