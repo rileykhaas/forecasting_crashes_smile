@@ -257,6 +257,22 @@ def task_pipeline():
     }
 
 
+def task_table1():
+    """E1: Replicate Table 1 (summary statistics) over the 1996-2022 window."""
+    return {
+        "actions": ["python ./src/exhibit_table1.py"],
+        "targets": [OUTPUT_DIR / "table1.tex", OUTPUT_DIR / "table1.csv"],
+        "file_dep": [
+            "./src/exhibit_table1.py",
+            "./src/sp500_secid_universe.py",
+            "./src/schema.py",
+            OUTPUT_DIR / "results.parquet",
+            DATA_DIR / "sp500_secid_universe.parquet",
+        ],
+        "clean": True,
+    }
+
+
 def task_example_exhibits():
     """Generate the placeholder example exhibits for the report template.
 
@@ -339,6 +355,7 @@ def task_compile_latex_docs():
         "./reports/slides_simple_example.tex",
         "./src/example_plot.py",
         "./src/example_table.py",
+        OUTPUT_DIR / "table1.tex",
     ]
     targets = [
         "./reports/report_example.pdf",
