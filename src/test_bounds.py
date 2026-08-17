@@ -187,6 +187,31 @@ def test_crash_bounds_ordering_holds_with_smile(smile_slice, flat_vol_35_name, t
     assert schema.check_bound_ordering(results)
 
 
+# A sparse, steeply-skewed 30-day smile: linear vol interpolation between these
+# few strikes makes the raw BL density non-monotone, so the isotonic fit differs
+# materially from the raw gradient near q_l. Found by search to reproduce the
+# real failure (secid 101397, Jan-2008). With the pre-fix raw-gradient boundary
+# this drives P^L to 0.36 at q=0.9 while P* is 0.036 -- a 0.32 ordering breach.
+_SKEW_MONEYNESS = [0.75, 0.792, 0.794, 0.833, 0.874, 0.875, 0.933, 0.941, 1.077, 1.25]
+_SKEW_VOL = [0.475, 0.441, 0.451, 0.362, 0.296, 0.362, 0.287, 0.205, 0.156, 0.05]
+
+
+@pytest.mark.parametrize("threshold_q", schema.THRESHOLDS_Q)
+def test_ordering_holds_for_steep_short_maturity_skew(threshold_q):
+    """Regression: Result 5's boundary derivative put'(q_l) must come from the
+    *fitted* marginal (Appendix D: Q_m = Rf*put'), not a raw np.gradient of the
+    price curve. On a sparse steep skew the two diverge and the raw version
+    breaks P^L <= P* by ~0.3; the fitted version keeps the ordering. Uses the
+    index (i = m) case, exactly the fixture that failed on real data.
+    """
+    cdf = risk_neutral_cdf(
+        _surface_slice(np.array(_SKEW_MONEYNESS), np.array(_SKEW_VOL), secid=schema.SPX_SECID),
+        RATE,
+    )
+    bound_lower, prob_riskneutral, bound_upper = crash_bounds(cdf, cdf, RATE, threshold_q)
+    assert bound_lower <= prob_riskneutral <= bound_upper
+
+
 def test_crash_bounds_are_monotone_in_horizon():
     """Property: for a fixed sub-100% threshold, both bounds should rise (or
     stay flat) as the horizon lengthens -- same intuition as P* itself

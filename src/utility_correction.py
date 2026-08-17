@@ -66,14 +66,22 @@ def weighted_tail_expectation(index_cdf, rate, k_level, tail, gamma=GAMMA):
 
     if tail == "lower":
         put_at_k = float(np.interp(k_level, grid, put_grid))
-        put_prime_at_k = float(np.interp(k_level, grid, np.gradient(put_grid, grid)))
+        # Result 5's boundary derivative put'(K_l) IS the marginal: Appendix D
+        # defines Q_m(K) = Rf * put'(K) on the OTM-put side, and fits isotonic to
+        # it. So put'(k) = Q_m(k)/Rf must come from the *fitted* CDF (index_cdf) --
+        # using a raw np.gradient of the price curve is the pre-isotonic marginal,
+        # which is inconsistent with the q_l that Result 3 derives from the fitted
+        # Q_m, and breaks P^L <= P* at short maturities.
+        put_prime_at_k = float(index_cdf(k_level)) / forward
         boundary = forward * k_level**gamma * (put_prime_at_k - gamma * put_at_k / k_level)
         integral = _midpoint_integral(grid, kernel * put_grid, grid <= k_level)
         return boundary + forward * integral
 
     if tail == "upper":
         call_at_k = float(np.interp(k_level, grid, call_grid))
-        call_prime_at_k = float(np.interp(k_level, grid, np.gradient(call_grid, grid)))
+        # Symmetric to the lower tail: Appendix D defines Q_m(K) = Rf * call'(K) + 1
+        # on the OTM-call side, so call'(k) = (Q_m(k) - 1)/Rf from the fitted CDF.
+        call_prime_at_k = (float(index_cdf(k_level)) - 1.0) / forward
         boundary = forward * k_level**gamma * (
             gamma * call_at_k / k_level - call_prime_at_k
         )
