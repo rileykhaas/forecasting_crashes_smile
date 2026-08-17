@@ -143,6 +143,59 @@ def pull_security_names(secids, wrds_username=WRDS_USERNAME):
     return df
 
 
+def _empty_month_ends(surface, month_ends):
+    """Month-ends whose pulled surface is entirely OptionMetrics sentinel.
+
+    OptionMetrics occasionally fails to compute a surface on the month-end
+    snapshot: every row comes back with the -99.99 "missing" strike and null vol
+    (e.g. 2020-07-31 in our vintage). Such a month-end has no row with a positive
+    strike -- those are the ones the last-valid-day fallback handles.
+    """
+    month_ends = pd.DatetimeIndex(month_ends)
+    if surface.empty:
+        return list(month_ends)
+    have = set(surface.loc[surface["impl_strike"] > 0, "date"].unique())
+    return [d for d in month_ends if d not in have]
+
+
+def _pull_month_last_valid(db, month_end, secid_in, days_in):
+    """Surface rows for the last trading day WITH a valid fit in ``month_end``'s
+    month, re-stamped to the month-end date.
+
+    Used only for the empty month-ends flagged by ``_empty_month_ends``. Keeping
+    the output date at the month-end means every downstream table (rates,
+    realized_returns, results) still joins on the standard formation date; only
+    the surface itself is a few days stale for that one month.
+    """
+    month_end = pd.Timestamp(month_end)
+    month_start = month_end.replace(day=1)
+    table = VSURFD_TABLE_FMT.format(year=month_end.year)
+    max_q = f"""
+        SELECT MAX(date) AS d
+        FROM {table}
+        WHERE secid IN ({secid_in})
+          AND days IN ({days_in})
+          AND date BETWEEN '{month_start:%Y-%m-%d}' AND '{month_end:%Y-%m-%d}'
+          AND impl_strike > 0 AND impl_volatility IS NOT NULL
+    """
+    res = db.raw_sql(max_q, date_cols=["d"])
+    if res.empty or pd.isna(res["d"].iloc[0]):
+        return pd.DataFrame()
+    source_date = pd.Timestamp(res["d"].iloc[0])
+    full_q = f"""
+        SELECT secid, date, days, cp_flag, delta,
+               impl_volatility, impl_strike, dispersion
+        FROM {table}
+        WHERE secid IN ({secid_in})
+          AND days IN ({days_in})
+          AND date = '{source_date:%Y-%m-%d}'
+    """
+    out = db.raw_sql(full_q, date_cols=["date"])
+    out["date"] = month_end  # re-stamp to the month-end formation date
+    out.attrs["source_date"] = source_date
+    return out
+
+
 def pull_vol_surface(
     secids, month_ends, maturities=MATURITIES_DAYS, wrds_username=WRDS_USERNAME
 ):
@@ -152,6 +205,10 @@ def pull_vol_surface(
     and (c) the month-end trading days, so the daily surface stays a manageable
     pull. Within each maturity slice the FULL smile (all deltas, both cp_flag)
     is kept -- the bounds integrate across strikes. No quality filtering here.
+
+    Month-ends where OptionMetrics has no computed surface (all -99.99 sentinel,
+    e.g. 2020-07-31) fall back to that month's last valid trading day, re-stamped
+    to the month-end so downstream joins are unaffected.
 
     Returns a long DataFrame: one row per date x secid x maturity x delta x
     cp_flag, with the raw ``impl_volatility``, ``impl_strike`` and ``dispersion``
@@ -180,6 +237,17 @@ def pull_vol_surface(
             year_df = db.raw_sql(query, date_cols=["date"])
             frames.append(year_df)
             print(f"[pull_vol_surface] {year}: {len(year_df):,} rows", flush=True)
+
+        surface = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+        for month_end in _empty_month_ends(surface, month_ends):
+            fb = _pull_month_last_valid(db, month_end, secid_in, days_in)
+            if not fb.empty:
+                src = pd.Timestamp(fb.attrs["source_date"]).date()
+                print(
+                    f"[pull_vol_surface] {month_end.date()} month-end empty; "
+                    f"used {src} ({len(fb):,} rows)", flush=True
+                )
+                frames.append(fb)
     finally:
         db.close()
 

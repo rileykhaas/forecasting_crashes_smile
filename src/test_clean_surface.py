@@ -53,6 +53,16 @@ def test_dispersion_band_is_exclusive():
     assert set(out["secid"]) == {1}
 
 
+def test_missing_data_sentinel_rows_are_dropped():
+    """OptionMetrics' -99.99 "missing" sentinel (a surface snapshot that failed to
+    compute, e.g. the whole 2020-07 month-end in our vintage) carries no usable
+    strike and is rejected by the positive-strike criterion."""
+    raw = _raw(secid=1, n=12)
+    raw["impl_strike"] = -99.99
+    out = clean_surface(raw, _spot(1))
+    assert out.empty
+
+
 def test_positive_strike_required():
     """Non-positive strikes are dropped before anything else."""
     raw = _raw(secid=1, n=12)

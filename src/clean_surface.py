@@ -97,7 +97,11 @@ def clean_surface(raw_surface, spot_by_month):
     df = raw_surface.copy()
     df["secid"] = df["secid"].astype("int64")
 
-    # Criteria 2 & 3: positive strike; dispersion strictly inside (0, 0.05).
+    # Criteria 2 & 3: positive strike; dispersion strictly inside (0, 0.05). The
+    # strike test also rejects OptionMetrics' -99.99 "missing" sentinel, which is
+    # how a surface snapshot that failed to compute shows up (the entire 2020-07
+    # month-end is such a gap in our IvyDB vintage: impl_strike=-99.99, implied
+    # vol and dispersion NaN). Those rows carry no usable surface and are dropped.
     df = df[
         (df["impl_strike"] > 0) & (df["dispersion"] > 0) & (df["dispersion"] < 0.05)
     ]
