@@ -216,11 +216,87 @@ the formal counterpart of Table~\ref{tab:table1}. Two-way clustered standard err
 %======================================================================
 \section{Extension Through 2025}
 %======================================================================
-We recompute every replicated exhibit using data past the paper's 2022 cutoff ---
-the first out-of-sample test of whether the pattern survives. The March~2023
-regional-bank stress supplies fresh realized crash events, making the extension a
-genuine test rather than a mechanical roll-forward.
-\pending{Table 1 and Figures 1--2 recomputed through 2025}
+We recompute every replicated exhibit over the sample extended past the paper's
+December~2022 cutoff --- the first out-of-sample test of whether the pattern
+survives. The genuinely new period is 2023 onward; its one notable crash event is
+the March-2023 regional-bank stress (SVB and peers), while markets were otherwise
+calm. Index membership past the CRSP vintage (2024-12) is held forward (the
+\texttt{carried\_forward} freeze), which affects only the recent tail.
+
+\subsection{Figures 1 and 2, extended}
+Figures~\ref{fig:fig1ext} and~\ref{fig:fig2ext} carry the single-name and
+cross-sectional bounds through the extended sample.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{\PathToOutput/fig1_single_name_bounds_ext.png}
+\caption{Single-name bounds over the extended sample. The 2008 and 2020 spikes fall
+inside the paper's own window; the genuinely new post-2022 tail is quiet.}
+\label{fig:fig1ext}
+\end{figure}
+
+\noindent\textbf{What the new dates show.} The post-2022 period is calm for both
+names: the one-month, $20\%$-crash upper bound peaks at only $2.9\%$ for Apple
+(January 2023) and $2.1\%$ for AIG (May 2023, around the bank stress) --- an order of
+magnitude below their 2008 and 2020 crisis readings. No new crisis-scale spike
+appears, and the bounds behave out of sample exactly as they did within it.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{\PathToOutput/fig2_median_bounds_market_ext.png}
+\caption{Cross-sectional median bounds and the index over the extended sample. The
+market line stays lower and smoother than the median constituent, as in the
+replication.}
+\label{fig:fig2ext}
+\end{figure}
+
+\noindent\textbf{What the new dates show.} The aggregate picture is likewise quiet
+after 2022: the cross-sectional median one-month upper bound stays below $1\%$
+through 2023--2024, with the March-2023 bank stress registering as a small, localized
+bump rather than a broad spike. The market-below-constituents ordering persists.
+
+\subsection{Table 1, extended}
+Table~\ref{tab:table1ext} recomputes the summary statistics over the full extended
+sample.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Summary statistics over the extended sample. The lower bound continues to
+sit next to the realized crash frequency, while the risk-neutral probability and the
+upper bound still overstate --- the replication's pattern is unchanged.}
+\label{tab:table1ext}
+\input{\PathToOutput/table1_ext.tex}
+\end{table}
+
+\noindent\textbf{What changed.} Almost nothing. Adding the post-2022 data moves every
+summary statistic by at most $0.005$: at the $20\%$/12-month cell (across firms) the
+realized frequency edges from $0.157$ to $0.153$, the lower bound from $0.121$ to
+$0.120$, the risk-neutral probability from $0.235$ to $0.233$, and the upper bound
+from $0.339$ to $0.335$. The lower-bound-tracks-realized relationship holds, nudged
+microscopically downward by the calm post-2022 period.
+
+\subsection{Table 2, extended}
+Table~\ref{tab:table2ext} re-runs the calibration regressions over the full extended
+sample.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\caption{Calibration regressions over the extended sample. The lower bound's
+$\beta \approx 1$ calibration survives, while the risk-neutral probability and the
+upper bound remain miscalibrated.}
+\label{tab:table2ext}
+\resizebox{\textwidth}{!}{\input{\PathToOutput/table2_ext.tex}}
+\end{table}
+
+\noindent\textbf{What changed.} No significant change. The slope estimates move by
+about $+0.02$: at the $20\%$/12-month cell the lower bound goes from $\beta = 1.13$ to
+$1.15$, the risk-neutral from $0.68$ to $0.70$, and the upper bound from $0.42$ to
+$0.44$. The lower bound stays calibrated ($\beta \approx 1$), the risk-neutral and
+upper bounds stay miscalibrated, and the ranking is untouched. This is expected:
+roughly two additional --- and mostly quiet --- years add little information relative
+to the 27-year base sample, so the estimates barely move.
 
 \paragraph{Figure 6 --- out-of-sample forecasting performance.} Figure~6 reports
 out-of-sample $R^2$s that compare the lower bound's forecasts against a

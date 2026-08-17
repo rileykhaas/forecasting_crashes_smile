@@ -261,7 +261,10 @@ def task_table1():
     """E1: Replicate Table 1 (summary statistics) over the 1996-2022 window."""
     return {
         "actions": ["python ./src/exhibit_table1.py"],
-        "targets": [OUTPUT_DIR / "table1.tex", OUTPUT_DIR / "table1.csv"],
+        "targets": [
+            OUTPUT_DIR / "table1.tex", OUTPUT_DIR / "table1.csv",
+            OUTPUT_DIR / "table1_ext.tex", OUTPUT_DIR / "table1_ext.csv",
+        ],
         "file_dep": [
             "./src/exhibit_table1.py",
             "./src/sp500_secid_universe.py",
@@ -277,7 +280,10 @@ def task_fig1():
     """E: Figure 1 -- single-name crash-probability bounds (AAPL & AIG)."""
     return {
         "actions": ["python ./src/exhibit_fig1.py"],
-        "targets": [OUTPUT_DIR / "fig1_single_name_bounds.png"],
+        "targets": [
+            OUTPUT_DIR / "fig1_single_name_bounds.png",
+            OUTPUT_DIR / "fig1_single_name_bounds_ext.png",
+        ],
         "file_dep": [
             "./src/exhibit_fig1.py",
             "./src/plot_style.py",
@@ -291,7 +297,10 @@ def task_fig2():
     """E: Figure 2 -- cross-sectional median bounds + the S&P 500 index."""
     return {
         "actions": ["python ./src/exhibit_fig2.py"],
-        "targets": [OUTPUT_DIR / "fig2_median_bounds_market.png"],
+        "targets": [
+            OUTPUT_DIR / "fig2_median_bounds_market.png",
+            OUTPUT_DIR / "fig2_median_bounds_market_ext.png",
+        ],
         "file_dep": [
             "./src/exhibit_fig2.py",
             "./src/plot_style.py",
@@ -307,7 +316,10 @@ def task_table2():
     """E: Replicate Table 2 -- regression calibration tests (alpha, beta, R^2)."""
     return {
         "actions": ["python ./src/exhibit_table2.py"],
-        "targets": [OUTPUT_DIR / "table2.tex", OUTPUT_DIR / "table2.csv"],
+        "targets": [
+            OUTPUT_DIR / "table2.tex", OUTPUT_DIR / "table2.csv",
+            OUTPUT_DIR / "table2_ext.tex", OUTPUT_DIR / "table2_ext.csv",
+        ],
         "file_dep": [
             "./src/exhibit_table2.py",
             "./src/sp500_secid_universe.py",
@@ -385,8 +397,12 @@ def task_compile_latex_docs():
             "./reports/my_common_header.sty",
             OUTPUT_DIR / "table1.tex",
             OUTPUT_DIR / "table2.tex",
+            OUTPUT_DIR / "table1_ext.tex",
+            OUTPUT_DIR / "table2_ext.tex",
             OUTPUT_DIR / "fig1_single_name_bounds.png",
             OUTPUT_DIR / "fig2_median_bounds_market.png",
+            OUTPUT_DIR / "fig1_single_name_bounds_ext.png",
+            OUTPUT_DIR / "fig2_median_bounds_market_ext.png",
         ],
         "clean": True,
     }
