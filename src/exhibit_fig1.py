@@ -60,6 +60,7 @@ def build_figure1(results, names=NAMES, start=REPL_START, end=REPL_END):
                 label=f"{label}: lower bound")
 
     paper_style(ax, ymax, y_floor=0.62, y_minor=0.05)
+    ax.set_title("Option-Implied Crash Bounds: Apple and AIG", fontsize=12, pad=10)
     ax.set_ylabel("Probability of a 20% Crash")
     ax.legend(title="Probability:", frameon=False, loc="upper right")
     fig.tight_layout()

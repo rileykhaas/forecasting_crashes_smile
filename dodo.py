@@ -303,6 +303,22 @@ def task_fig2():
     }
 
 
+def task_table2():
+    """E: Replicate Table 2 -- regression calibration tests (alpha, beta, R^2)."""
+    return {
+        "actions": ["python ./src/exhibit_table2.py"],
+        "targets": [OUTPUT_DIR / "table2.tex", OUTPUT_DIR / "table2.csv"],
+        "file_dep": [
+            "./src/exhibit_table2.py",
+            "./src/sp500_secid_universe.py",
+            "./src/schema.py",
+            OUTPUT_DIR / "results.parquet",
+            DATA_DIR / "sp500_secid_universe.parquet",
+        ],
+        "clean": True,
+    }
+
+
 notebook_tasks = {
     "01_data_tour.ipynb.py": {
         "path": "./src/01_data_tour.ipynb.py",
@@ -368,6 +384,7 @@ def task_compile_latex_docs():
             "./reports/my_article_header.sty",
             "./reports/my_common_header.sty",
             OUTPUT_DIR / "table1.tex",
+            OUTPUT_DIR / "table2.tex",
             OUTPUT_DIR / "fig1_single_name_bounds.png",
             OUTPUT_DIR / "fig2_median_bounds_market.png",
         ],

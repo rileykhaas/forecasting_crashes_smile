@@ -175,6 +175,20 @@ tags = ["crash", "replication", "Table 1", "summary statistics", "exhibit"]
 path = "./_output/table1.csv"
 docs_path = "./docs_src/dataframes/table1.md"
 
+[dataframes.table2]
+name = "Table 2 — Calibration Regressions (replication)"
+description = "Our replication of Martin & Shi (2025) Table 2 over 1996-2022: for each crash size q, horizon tau, and measure (lower bound / risk-neutral / upper bound), the pooled OLS of the realized crash indicator on the measure -- alpha, beta, R^2 with two-way clustered (Thompson 2011) and block-bootstrap (Martin & Wagner 2019) standard errors. The lower bound calibrates at beta approx 1."
+sources = ["Derived (exhibit_table2.py from results.parquet)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit table2`."
+pull_method = "exhibit_table2.py: pooled OLS I(R<=q)=a+b*X per (q, horizon, measure) over S&P 500 constituent member-months, with two-way clustered and horizon-block bootstrap SEs"
+tags = ["crash", "replication", "Table 2", "regression", "calibration", "exhibit"]
+path = "./_output/table2.csv"
+docs_path = "./docs_src/dataframes/table2.md"
+
 
 [charts]
 

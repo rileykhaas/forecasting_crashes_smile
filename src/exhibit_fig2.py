@@ -76,6 +76,7 @@ def build_figure2(results, member_panel, start=REPL_START, end=REPL_END):
     ax.plot(mkt["date"], mkt["bound_lower"], color=C_MARKET, lw=1.0, label="Market")
 
     paper_style(ax, ymax, y_floor=0.27, y_minor=0.025)
+    ax.set_title("Cross-Sectional Median Bounds and the S&P 500 Index", fontsize=12, pad=10)
     ax.set_ylabel("Probability of a 20% Crash")
     ax.legend(title="Probability:", frameon=False, loc="upper right")
     fig.tight_layout()
