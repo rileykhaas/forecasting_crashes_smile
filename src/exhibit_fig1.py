@@ -12,11 +12,10 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")  # headless: save files, never open a window
-import matplotlib.dates as mdates  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
-from matplotlib.ticker import MultipleLocator, PercentFormatter  # noqa: E402
 
+from plot_style import paper_style  # noqa: E402
 from settings import config  # noqa: E402
 
 OUTPUT_DIR = Path(config("OUTPUT_DIR"))
@@ -60,23 +59,7 @@ def build_figure1(results, names=NAMES, start=REPL_START, end=REPL_END):
         ax.plot(s["date"], s["bound_lower"], color=c_lo, lw=1.0,
                 label=f"{label}: lower bound")
 
-    # x spans the full width (no left/right gap); y reaches at least 60% (the
-    # paper's axis) with 0% floating just off the bottom axis.
-    ax.margins(x=0)
-    ax.set_ylim(-0.012, max(0.62, ymax * 1.05))
-    ax.yaxis.set_major_formatter(PercentFormatter(xmax=1.0))
-    # Biennial year ticks (1998, 2000, ..., 2022), matching the paper.
-    ax.xaxis.set_major_locator(mdates.YearLocator(2))
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
-    # Faint ggplot-style grid: light-grey major lines, fainter minor between.
-    ax.xaxis.set_minor_locator(mdates.YearLocator(1))
-    ax.yaxis.set_minor_locator(MultipleLocator(0.05))
-    ax.grid(True, which="major", color="#d0d0d0", linewidth=0.6)
-    ax.grid(True, which="minor", color="#ececec", linewidth=0.4)
-    ax.set_axisbelow(True)  # grid behind the data
-    for spine in ax.spines.values():
-        spine.set_visible(False)
-    ax.set_xlabel("Date")
+    paper_style(ax, ymax, y_floor=0.62, y_minor=0.05)
     ax.set_ylabel("Probability of a 20% Crash")
     ax.legend(title="Probability:", frameon=False, loc="upper right")
     fig.tight_layout()

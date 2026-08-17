@@ -280,7 +280,24 @@ def task_fig1():
         "targets": [OUTPUT_DIR / "fig1_single_name_bounds.png"],
         "file_dep": [
             "./src/exhibit_fig1.py",
+            "./src/plot_style.py",
             OUTPUT_DIR / "results.parquet",
+        ],
+        "clean": True,
+    }
+
+
+def task_fig2():
+    """E: Figure 2 -- cross-sectional median bounds + the S&P 500 index."""
+    return {
+        "actions": ["python ./src/exhibit_fig2.py"],
+        "targets": [OUTPUT_DIR / "fig2_median_bounds_market.png"],
+        "file_dep": [
+            "./src/exhibit_fig2.py",
+            "./src/plot_style.py",
+            "./src/sp500_secid_universe.py",
+            OUTPUT_DIR / "results.parquet",
+            DATA_DIR / "sp500_secid_universe.parquet",
         ],
         "clean": True,
     }
@@ -352,6 +369,7 @@ def task_compile_latex_docs():
             "./reports/my_common_header.sty",
             OUTPUT_DIR / "table1.tex",
             OUTPUT_DIR / "fig1_single_name_bounds.png",
+            OUTPUT_DIR / "fig2_median_bounds_market.png",
         ],
         "clean": True,
     }
