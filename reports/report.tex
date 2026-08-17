@@ -142,12 +142,23 @@ reader meets the argument: first the raw signal for individual names and for the
 market (Figures~1 and 2), then the pooled summary statistics (Table~1) and the
 formal calibration test (Table~2).
 
-\paragraph{Figure 1 --- bounds for individual stocks.} Figure~1 plots the time
-series of the option-implied upper and lower bounds on the one-month probability of
-a $20\%$ crash for two representative names, Apple and AIG. It shows how the bounds
-move with market stress, and how far apart the ``cries wolf'' risk-neutral reading
-and the fear-corrected lower bound can be for a single name.
-\pending{Figure 1 --- one-month 20\% crash-probability bounds for Apple and AIG}
+\paragraph{Figure 1 --- bounds for individual stocks.} Figure~\ref{fig:fig1} plots
+the time series of the option-implied upper and lower bounds on the one-month
+probability of a $20\%$ crash for two representative names, Apple and AIG. It shows
+how the bounds move with market stress, and how far apart the ``cries wolf''
+risk-neutral reading and the fear-corrected lower bound can be for a single name.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{\PathToOutput/fig1_single_name_bounds.png}
+\caption{Option-implied bounds on the probability of a $20\%$ crash over one month
+for AIG (red/pink) and Apple (blue/light-blue), 1996--2022; the shaded band spans
+each name's lower and upper bound. The bounds vary sharply across firms and over
+time --- AIG's crash risk spikes during the 2008--09 financial crisis, exactly when
+the uncorrected risk-neutral signal ``cries wolf'' loudest, while Apple's is
+elevated in the early-2000s tech unwind.}
+\label{fig:fig1}
+\end{figure}
 
 \paragraph{Figure 2 --- the market and the cross-section.} Figure~2 plots the
 cross-sectional medians of the upper and lower bounds over time, together with the

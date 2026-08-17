@@ -273,6 +273,19 @@ def task_table1():
     }
 
 
+def task_fig1():
+    """E: Figure 1 -- single-name crash-probability bounds (AAPL & AIG)."""
+    return {
+        "actions": ["python ./src/exhibit_fig1.py"],
+        "targets": [OUTPUT_DIR / "fig1_single_name_bounds.png"],
+        "file_dep": [
+            "./src/exhibit_fig1.py",
+            OUTPUT_DIR / "results.parquet",
+        ],
+        "clean": True,
+    }
+
+
 notebook_tasks = {
     "01_data_tour.ipynb.py": {
         "path": "./src/01_data_tour.ipynb.py",
@@ -338,6 +351,7 @@ def task_compile_latex_docs():
             "./reports/my_article_header.sty",
             "./reports/my_common_header.sty",
             OUTPUT_DIR / "table1.tex",
+            OUTPUT_DIR / "fig1_single_name_bounds.png",
         ],
         "clean": True,
     }
