@@ -312,6 +312,24 @@ def task_fig2():
     }
 
 
+def task_fig6():
+    """E: Figure 6 -- out-of-sample R^2s of the lower bound vs. the risk-neutral."""
+    return {
+        "actions": ["python ./src/exhibit_fig6.py"],
+        "targets": [
+            OUTPUT_DIR / "fig6_oos_r2.png",
+            OUTPUT_DIR / "fig6_oos_r2_ext.png",
+        ],
+        "file_dep": [
+            "./src/exhibit_fig6.py",
+            "./src/sp500_secid_universe.py",
+            OUTPUT_DIR / "results.parquet",
+            DATA_DIR / "sp500_secid_universe.parquet",
+        ],
+        "clean": True,
+    }
+
+
 def task_table2():
     """E: Replicate Table 2 -- regression calibration tests (alpha, beta, R^2)."""
     return {
@@ -403,6 +421,8 @@ def task_compile_latex_docs():
             OUTPUT_DIR / "fig2_median_bounds_market.png",
             OUTPUT_DIR / "fig1_single_name_bounds_ext.png",
             OUTPUT_DIR / "fig2_median_bounds_market_ext.png",
+            OUTPUT_DIR / "fig6_oos_r2.png",
+            OUTPUT_DIR / "fig6_oos_r2_ext.png",
         ],
         "clean": True,
     }
