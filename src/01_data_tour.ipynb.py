@@ -63,6 +63,7 @@ from clean_surface import load_clean_surface
 from rnd import risk_neutral_cdf
 from bounds import crash_bounds
 
+# %matplotlib inline
 DATA_DIR = Path(config("DATA_DIR"))
 OUTPUT_DIR = Path(config("OUTPUT_DIR"))
 plt.rcParams["figure.figsize"] = (8, 4.5)
@@ -88,17 +89,21 @@ surface.head()
 # ## Step 2. Inspect one volatility smile
 #
 # We isolate a single smile — the S&P 500 index, the most recent month-end in the
-# sample, the ~1-month (30-day) maturity — and plot implied volatility against
-# moneyness. The upward tilt toward low moneyness is the **skew**: out-of-the-money
-# puts (crash insurance) trade at higher implied volatility. This asymmetry is the
-# signal the whole method extracts.
+# sample, the **1-year (365-day)** maturity — and plot implied volatility against
+# moneyness. We use the one-year horizon deliberately: over a single month a 20–30%
+# crash is essentially impossible, so the risk-neutral probabilities there round to
+# zero and illustrate nothing. One year is also the horizon where Martin & Shi find
+# the lower bound tightest — closest to the true crash probability — so it is the
+# natural showcase. The upward tilt toward low moneyness is the **skew**:
+# out-of-the-money puts (crash insurance) trade at higher implied volatility, the
+# asymmetry the whole method extracts.
 
 # %%
 date = surface.loc[surface["secid"] == schema.SPX_SECID, "date"].max()
 smile = surface[
     (surface["secid"] == schema.SPX_SECID)
     & (surface["date"] == date)
-    & (surface["days_to_maturity"] == 30)
+    & (surface["days_to_maturity"] == 365)
 ].sort_values("moneyness")
 smile.head()
 
@@ -108,7 +113,7 @@ ax.plot(smile["moneyness"], smile["implied_vol"], marker="o", ms=3)
 ax.axvline(1.0, color="grey", ls="--", lw=0.8, label="at-the-money")
 ax.set_xlabel("moneyness  (strike / spot)")
 ax.set_ylabel("implied volatility")
-ax.set_title(f"S&P 500 implied-vol smile, 30-day, {date.date()}")
+ax.set_title(f"S&P 500 implied-vol smile, 1-year, {date.date()}")
 ax.legend()
 fig
 
@@ -129,7 +134,7 @@ fig, ax = plt.subplots()
 ax.plot(cdf.grid, cdf.values)
 ax.set_xlabel("gross return  q = S_T / S_0")
 ax.set_ylabel(r"$Q(q) = \mathbb{P}^*[R \leq q]$")
-ax.set_title(f"Risk-neutral CDF of the 30-day S&P 500 return, {date.date()}")
+ax.set_title(f"Risk-neutral CDF of the 1-year S&P 500 return, {date.date()}")
 for q in schema.THRESHOLDS_Q:
     ax.axvline(q, color="grey", ls="--", lw=0.7)
     ax.annotate(f"q={q}", (q, 0.02), rotation=90, va="bottom", fontsize=8)
