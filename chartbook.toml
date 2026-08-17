@@ -17,10 +17,10 @@ doit
 [notebooks]
 
 
-[notebooks.01_example_notebook_interactive]
-name = "Example Notebook Interactive"
-description = "Example notebook for demonstrating how to construct a Chartbook notebook."
-path = "_output/01_example_notebook_interactive.ipynb"
+[notebooks.01_data_tour]
+name = "Data Tour"
+description = "A guided tour of the cleaned firm-month panel and the crash-probability bounds: the option-implied volatility surface, the recovered risk-neutral densities, and the lower/upper bounds tested against realized crashes."
+path = "_output/01_data_tour.ipynb"
 
 
 

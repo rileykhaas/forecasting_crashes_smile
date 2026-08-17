@@ -273,35 +273,13 @@ def task_table1():
     }
 
 
-def task_example_exhibits():
-    """Generate the placeholder example exhibits for the report template.
-
-    Self-contained synthetic table + figure (no external data); the real
-    exhibits (#33 / E5 / E6) will replace these.
-    """
-    scripts = [
-        "./src/example_table.py",
-        "./src/pandas_to_latex_demo.py",
-        "./src/example_plot.py",
-    ]
-    targets = [
-        OUTPUT_DIR / "example_table.tex",
-        OUTPUT_DIR / "pandas_to_latex_simple_table1.tex",
-        OUTPUT_DIR / "example_plot.png",
-    ]
-
-    return {
-        "actions": [f"python {script}" for script in scripts],
-        "targets": targets,
-        "file_dep": scripts,
-        "clean": True,
-    }
-
-
 notebook_tasks = {
-    "01_example_notebook_interactive.ipynb.py": {
-        "path": "./src/01_example_notebook_interactive.ipynb.py",
-        "file_dep": [],
+    "01_data_tour.ipynb.py": {
+        "path": "./src/01_data_tour.ipynb.py",
+        "file_dep": [
+            DATA_DIR / "clean_surface.parquet",
+            OUTPUT_DIR / "results.parquet",
+        ],
         "targets": [],
     },
 }
@@ -344,41 +322,23 @@ def task_run_notebooks():
 
 
 def task_compile_latex_docs():
-    """Compile the LaTeX documents to PDFs"""
-    file_dep = [
-        "./reports/report_example.tex",
-        "./reports/my_article_header.sty",
-        "./reports/slides_example.tex",
-        "./reports/my_beamer_header.sty",
-        "./reports/my_common_header.sty",
-        "./reports/report_simple_example.tex",
-        "./reports/slides_simple_example.tex",
-        "./src/example_plot.py",
-        "./src/example_table.py",
-        OUTPUT_DIR / "table1.tex",
-    ]
-    targets = [
-        "./reports/report_example.pdf",
-        "./reports/slides_example.pdf",
-        "./reports/report_simple_example.pdf",
-        "./reports/slides_simple_example.pdf",
-    ]
+    """Compile the project report (report.tex) to PDF.
 
+    The report \\input's the auto-generated exhibits from OUTPUT_DIR, so those
+    are file_deps -- doit builds them first and rebuilds the PDF when they change.
+    """
     return {
         "actions": [
-            # My custom LaTeX templates
-            "latexmk -xelatex -halt-on-error -cd ./reports/report_example.tex",  # Compile
-            "latexmk -xelatex -halt-on-error -c -cd ./reports/report_example.tex",  # Clean
-            "latexmk -xelatex -halt-on-error -cd ./reports/slides_example.tex",  # Compile
-            "latexmk -xelatex -halt-on-error -c -cd ./reports/slides_example.tex",  # Clean
-            # Simple templates based on small adjustments to Overleaf templates
-            "latexmk -xelatex -halt-on-error -cd ./reports/report_simple_example.tex",  # Compile
-            "latexmk -xelatex -halt-on-error -c -cd ./reports/report_simple_example.tex",  # Clean
-            "latexmk -xelatex -halt-on-error -cd ./reports/slides_simple_example.tex",  # Compile
-            "latexmk -xelatex -halt-on-error -c -cd ./reports/slides_simple_example.tex",  # Clean
+            "latexmk -xelatex -halt-on-error -cd ./reports/report.tex",  # Compile
+            "latexmk -xelatex -halt-on-error -c -cd ./reports/report.tex",  # Clean aux
         ],
-        "targets": targets,
-        "file_dep": file_dep,
+        "targets": ["./reports/report.pdf"],
+        "file_dep": [
+            "./reports/report.tex",
+            "./reports/my_article_header.sty",
+            "./reports/my_common_header.sty",
+            OUTPUT_DIR / "table1.tex",
+        ],
         "clean": True,
     }
 
