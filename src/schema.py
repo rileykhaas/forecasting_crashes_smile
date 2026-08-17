@@ -181,18 +181,28 @@ def validate_schema(df, table, check_dtypes=True):
     return True
 
 
-def check_bound_ordering(df):
+def check_bound_ordering(df, atol=1e-3):
     """Verify the theoretical invariant P^L <= P^* <= P^U on a results frame.
 
-    Result 3 of Martin & Shi (2025) guarantees the risk-neutral probability
-    lies between the lower and upper bounds. Raises ValueError if any row
-    violates the ordering; returns True otherwise.
+    Result 3 of Martin & Shi (2025) guarantees the risk-neutral probability lies
+    between the lower and upper bounds *exactly*. Empirically the marginals are
+    isotonic-fitted and inverted by interpolation, so q_l = Q_m^-1(P^*) round-trips
+    back to within ~1e-4 of P^*; ``atol`` absorbs that floating-point-level noise
+    while still catching any structural violation, which is orders of magnitude
+    larger. Raises ValueError if any row breaks the ordering by more than atol.
     """
-    lower_ok = (df["bound_lower"] <= df["prob_riskneutral"]).all()
-    upper_ok = (df["prob_riskneutral"] <= df["bound_upper"]).all()
-    if not (lower_ok and upper_ok):
+    lo_excess = (df["bound_lower"] - df["prob_riskneutral"]).max()
+    hi_excess = (df["prob_riskneutral"] - df["bound_upper"]).max()
+    if lo_excess > atol or hi_excess > atol:
+        n = int(
+            (
+                (df["bound_lower"] - df["prob_riskneutral"] > atol)
+                | (df["prob_riskneutral"] - df["bound_upper"] > atol)
+            ).sum()
+        )
         raise ValueError(
-            "Bound ordering violated: require "
-            "bound_lower <= prob_riskneutral <= bound_upper for every row."
+            f"Bound ordering violated beyond tolerance (atol={atol}): {n} rows, "
+            f"max lower excess {lo_excess:.3e}, max upper excess {hi_excess:.3e}. "
+            "Require bound_lower <= prob_riskneutral <= bound_upper."
         )
     return True

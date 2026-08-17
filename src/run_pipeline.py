@@ -29,55 +29,56 @@ def run_pipeline(clean_surface, rates, realized_returns):
         for row in rates.itertuples()
     }
 
-    # One risk-neutral CDF per (secid, date, days_to_maturity), including the
-    # market index -- built once and reused for every name/threshold that day.
-    # A smile can still fail here even with plenty of raw rows: rnd.py's OTM
-    # filter can leave nothing usable for a thin/illiquid name, so we skip
-    # those rather than let one bad group crash the whole run.
-    cdfs = {}
-    n_skipped = 0
-    for (secid, date, days), smile in clean_surface.groupby(
-        ["secid", "date", "days_to_maturity"]
-    ):
-        rate = rate_lookup.get((date, days))
-        if rate is None:
-            continue
-        try:
-            cdfs[(secid, date, days)] = (risk_neutral_cdf(smile, rate), rate)
-        except ValueError:
-            n_skipped += 1
-    if n_skipped:
-        print(f"run_pipeline: skipped {n_skipped} smiles with no usable OTM quotes")
-
+    # Stream one (date, maturity) at a time. All CDFs for a day's ~1.2k names
+    # are built, used, and then discarded before moving on -- holding every
+    # (secid, date, maturity) CDF at once (each three 2000-pt arrays, ~700k of
+    # them) exhausts memory and the run gets OOM-killed. Memory here is bounded
+    # by a single day's names (~60 MB) instead of the whole panel (~34 GB).
     rows = []
-    for (secid, date, days), (cdf_i, rate) in cdfs.items():
+    n_skipped = 0
+    for (date, days), day in clean_surface.groupby(["date", "days_to_maturity"]):
         horizon = DAYS_TO_HORIZON.get(days)
-        if horizon is None:
+        rate = rate_lookup.get((date, days))
+        if horizon is None or rate is None:
             continue
-        market = cdfs.get((schema.SPX_SECID, date, days))
+
+        # A smile can still fail rnd.py's OTM filter for a thin/illiquid name,
+        # so skip those rather than let one bad group crash the whole run.
+        cdfs = {}
+        for secid, smile in day.groupby("secid"):
+            try:
+                cdfs[secid] = risk_neutral_cdf(smile, rate)
+            except ValueError:
+                n_skipped += 1
+
+        market = cdfs.get(schema.SPX_SECID)
         if market is None:
             continue
-        cdf_m, _ = market
-        # The index itself gets a row: when secid == SPX_SECID, cdf_i is cdf_m,
-        # which is the i = m case of Result 3. The lower bound then holds with
-        # equality and equals the market crash probability of eq. (7) -- the
-        # gray line in Figure 2 and the basis for the gamma calibration. No
-        # special-casing needed; crash_bounds handles i = m directly.
-        for threshold_q in schema.THRESHOLDS_Q:
-            bound_lower, prob_riskneutral, bound_upper = crash_bounds(
-                cdf_i, cdf_m, rate, threshold_q
-            )
-            rows.append(
-                {
-                    "date": date,
-                    "secid": secid,
-                    "horizon_months": horizon,
-                    "threshold_q": threshold_q,
-                    "bound_lower": bound_lower,
-                    "prob_riskneutral": prob_riskneutral,
-                    "bound_upper": bound_upper,
-                }
-            )
+
+        for secid, cdf_i in cdfs.items():
+            # The index itself gets a row: when secid == SPX_SECID, cdf_i IS the
+            # market cdf, the i = m case of Result 3 -- the lower bound holds with
+            # equality and equals the market crash probability of eq. (7) (the
+            # gray line in Figure 2, the gamma calibration). crash_bounds handles
+            # i = m directly, no special-casing.
+            for threshold_q in schema.THRESHOLDS_Q:
+                bound_lower, prob_riskneutral, bound_upper = crash_bounds(
+                    cdf_i, market, rate, threshold_q
+                )
+                rows.append(
+                    {
+                        "date": date,
+                        "secid": secid,
+                        "horizon_months": horizon,
+                        "threshold_q": threshold_q,
+                        "bound_lower": bound_lower,
+                        "prob_riskneutral": prob_riskneutral,
+                        "bound_upper": bound_upper,
+                    }
+                )
+
+    if n_skipped:
+        print(f"run_pipeline: skipped {n_skipped} smiles with no usable OTM quotes")
 
     results = pd.DataFrame(rows)
     results = results.merge(
