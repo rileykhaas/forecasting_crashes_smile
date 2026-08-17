@@ -170,8 +170,9 @@ def to_latex(stats):
         r"\midrule",
     ]
     for q, letter, desc in PANELS:
+        desc_tex = desc.replace("%", r"\%")  # backslash outside the f-string (py3.10)
         lines.append(rf"\multicolumn{{13}}{{c}}{{Panel {letter}: $q = {q:.2f}$, "
-                     rf"{desc.replace('%', r'\%')}}} \\")
+                     rf"{desc_tex}}} \\")
         lines.append(rf"$\alpha$ & {row(_cells(stats, q, 'alpha'), num)} \\")
         lines.append(rf" & {row(_cells(stats, q, 'alpha_se_cl'), paren)} \\")
         lines.append(rf" & {row(_cells(stats, q, 'alpha_se_bs'), brack)} \\")
