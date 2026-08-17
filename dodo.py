@@ -349,6 +349,28 @@ def task_table2():
     }
 
 
+def task_eda():
+    """E: EDA of the underlying option/return panel -- coverage table + 2x2 figure."""
+    return {
+        "actions": ["python ./src/exhibit_eda.py"],
+        "targets": [
+            OUTPUT_DIR / "eda_coverage.tex", OUTPUT_DIR / "eda_coverage.csv",
+            OUTPUT_DIR / "eda_coverage_ext.tex", OUTPUT_DIR / "eda_coverage_ext.csv",
+            OUTPUT_DIR / "eda_panel.png", OUTPUT_DIR / "eda_panel_ext.png",
+        ],
+        "file_dep": [
+            "./src/exhibit_eda.py",
+            "./src/clean_surface.py",
+            "./src/realized_returns.py",
+            "./src/sp500_secid_universe.py",
+            DATA_DIR / "clean_surface.parquet",
+            DATA_DIR / "realized_returns.parquet",
+            DATA_DIR / "sp500_secid_universe.parquet",
+        ],
+        "clean": True,
+    }
+
+
 notebook_tasks = {
     "01_data_tour.ipynb.py": {
         "path": "./src/01_data_tour.ipynb.py",
@@ -423,6 +445,8 @@ def task_compile_latex_docs():
             OUTPUT_DIR / "fig2_median_bounds_market_ext.png",
             OUTPUT_DIR / "fig6_oos_r2.png",
             OUTPUT_DIR / "fig6_oos_r2_ext.png",
+            OUTPUT_DIR / "eda_coverage.tex",
+            OUTPUT_DIR / "eda_panel.png",
         ],
         "clean": True,
     }

@@ -189,6 +189,20 @@ tags = ["crash", "replication", "Table 2", "regression", "calibration", "exhibit
 path = "./_output/table2.csv"
 docs_path = "./docs_src/dataframes/table2.md"
 
+[dataframes.eda_coverage]
+name = "EDA — Per-Year Panel Coverage"
+description = "Our own exploratory summary of the underlying option/return panel (issue #33): per-year coverage of the S&P 500 constituent member-months the replication runs on — number of names, firm-months, option quotes, quotes per firm-month, median implied vol, and the realized 12-month 20% crash frequency. Built from clean_surface.parquet + realized_returns.parquet (not the derived bounds)."
+sources = ["Derived (exhibit_eda.py from clean_surface + realized_returns)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit eda`."
+pull_method = "exhibit_eda.py: constituent-restricted clean_surface grouped by year for coverage stats; realized_returns for the 12-month 20% crash frequency"
+tags = ["EDA", "coverage", "summary statistics", "option surface", "underlying data"]
+path = "./_output/eda_coverage.csv"
+docs_path = "./docs_src/dataframes/eda_coverage.md"
+
 
 [charts]
 
@@ -212,4 +226,11 @@ description = "Cumulative out-of-sample R² (vs. a firm-specific historical-aver
 dataframe = "results"
 path = "./_output/fig6_oos_r2.png"
 docs_path = "./docs_src/charts/fig6_oos_r2.md"
+
+[charts.eda_panel]
+name = "EDA — The Underlying Option/Return Panel at a Glance"
+description = "Our own exploratory 2x2 view of the raw inputs (issue #33), over S&P 500 constituent member-months 1996-2022: (a) number of constituents carrying an option surface each month; (b) quote availability across the moneyness x maturity grid; (c) the implied-volatility smile by maturity; (d) the realized gross-return distribution at 1- vs 12-month horizons with the 20%/30% crash thresholds. Shows the inputs are well-populated in the downside-put tail the bound integrates, and that crashes are rare but non-trivial."
+dataframe = "clean_surface"
+path = "./_output/eda_panel.png"
+docs_path = "./docs_src/charts/eda_panel.md"
 

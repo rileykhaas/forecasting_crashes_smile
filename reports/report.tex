@@ -365,8 +365,67 @@ the measure survived the events that came after the study.
 Beyond the replicated exhibits, we present our own summary of the firm-month panel
 --- the coverage of the option surface, the cross-section of firms, and the
 distribution of realized returns --- so the reader can judge the data the bounds
-are built on.
-\pending{Own summary-statistics table and figure of the cleaned panel}
+are built on. Both exhibits are computed directly from the two cleaned inputs
+(\texttt{clean\_surface.parquet} and \texttt{realized\_returns.parquet}), restricted
+to S\&P~500 constituent member-months, so they describe exactly the sample the
+replication runs on. This is distinct from Table~\ref{tab:table1}, which reports the
+paper's statistics on the \emph{derived} crash-probability bounds; here we profile
+the \emph{raw inputs} those bounds are built from.
+
+Table~\ref{tab:eda} tabulates coverage year by year. The panel is broad and
+strikingly stable --- roughly $500$ constituent names carry an option surface in
+every year from 1996 to 2022, at a steady $\sim\!120$--$133$ quotes per firm-month
+--- so the bounds are estimated on consistent data rather than a coverage that drifts
+with the sample. Median implied volatility tracks the volatility cycle (peaking in
+2000, 2008, and 2020), and the last column shows the object being forecast: the
+realized frequency of a 20\% crash over the next twelve months is low on average but
+highly time-varying, spiking above $0.45$ for surfaces formed in 2007--2008 and
+falling near zero in calm years. Crashes are rare events, which is why the
+out-of-sample $R^2$s in Figure~\ref{fig:fig6ext} are single digits by construction.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Per-year coverage of the underlying option/return panel (S\&P~500
+constituent member-months, 1996--2022). Coverage is broad ($\sim\!500$ names) and
+continuous, at a stable quote density; median implied volatility traces the
+volatility cycle; and the final column --- the realized 12-month 20\% crash frequency
+--- shows the forecast target is a rare, strongly time-varying event, concentrated in
+crisis years. The takeaway: the bounds rest on a consistent, well-populated panel, and
+the thing they predict is genuinely hard to predict.}
+\label{tab:eda}
+\input{\PathToOutput/eda_coverage.tex}
+\end{table}
+
+Figure~\ref{fig:eda} reads the same panel four ways. Panel~(a) confirms the
+cross-section is continuous, with only a brief thinning around the March-2020
+dislocation. Panel~(b) is the most important for trusting the bound: it shows where on
+the surface we actually have quotes, and the out-of-the-money-put tail (moneyness
+$K/S$ well below $1$) --- the region the lower bound integrates --- is well populated,
+especially at the longer maturities the paper uses for multi-month horizons. Panel~(c)
+is the ``smile'' of the paper's title: median implied volatility rises sharply for
+downside strikes, steeply at short maturities and flatter at long ones, the option
+market's price of crash protection that the bound converts into a probability.
+Panel~(d) shows the realized-return distribution fanning out and growing a fat left
+tail as the horizon lengthens from one to twelve months, so the mass crossing the 20\%
+and 30\% crash lines --- the events in the last column of Table~\ref{tab:eda} --- is
+what the bounds are asked to forecast.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{\PathToOutput/eda_panel.png}
+\caption{The underlying option/return panel at a glance (S\&P~500 constituent
+member-months, 1996--2022). \textbf{(a)} The number of constituents carrying an option
+surface each month is stable near $500$, dipping only briefly in March 2020.
+\textbf{(b)} Quote availability across the moneyness $\times$ maturity grid: the
+downside-put tail that the lower bound integrates is well covered, more so at longer
+maturities. \textbf{(c)} The implied-volatility smile by maturity --- the downside
+skew the bound reads as crash risk. \textbf{(d)} The realized gross-return
+distribution develops a fat left tail as the horizon grows, placing real mass beyond
+the 20\% and 30\% crash thresholds. Together they show the inputs are well-populated
+exactly where the method needs them, and that crashes are rare but non-trivial.}
+\label{fig:eda}
+\end{figure}
 
 %======================================================================
 \section{Extensions}
