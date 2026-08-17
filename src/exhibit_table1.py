@@ -31,6 +31,7 @@ OUTPUT_DIR = Path(config("OUTPUT_DIR"))
 # Replication sample: monthly, Jan 1996 - Dec 2022 (T = 324 formation months).
 REPL_START = pd.Timestamp("1996-01-01")
 REPL_END = pd.Timestamp("2022-12-31")
+EXT_END = pd.Timestamp("2025-12-31")  # extension: through the most recent data
 
 # (display label, results column), in the paper's row order.
 MEASURES = [
@@ -171,8 +172,14 @@ if __name__ == "__main__":
 
     results = pd.read_parquet(OUTPUT_DIR / "results.parquet")
     universe = load_sp500_secid_universe()
-    stats = build_table1(results, universe)
 
+    # Replication window (1996-2022).
+    stats = build_table1(results, universe)
     stats.to_csv(OUTPUT_DIR / "table1.csv", index=False)
     (OUTPUT_DIR / "table1.tex").write_text(to_latex(stats))
+
+    # Extension through the most recent data.
+    stats_ext = build_table1(results, universe, end=EXT_END)
+    stats_ext.to_csv(OUTPUT_DIR / "table1_ext.csv", index=False)
+    (OUTPUT_DIR / "table1_ext.tex").write_text(to_latex(stats_ext))
     print(to_markdown(stats))

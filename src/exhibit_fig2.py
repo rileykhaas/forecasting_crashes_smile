@@ -26,6 +26,8 @@ THRESHOLD_Q = 0.80  # a 20% crash
 HORIZON_MONTHS = 1  # one-month horizon
 REPL_START = pd.Timestamp("1996-01-01")
 REPL_END = pd.Timestamp("2022-12-31")
+EXT_END = pd.Timestamp("2025-12-31")  # extension: through the most recent data
+TITLE = "Cross-Sectional Median Bounds and the S&P 500 Index"
 
 C_UPPER = "#e0576f"   # red
 C_LOWER = "#4f9ed6"   # blue
@@ -62,7 +64,7 @@ def market_series(results, start=REPL_START, end=REPL_END):
     return spx.sort_values("date")[["date", "bound_lower"]]
 
 
-def build_figure2(results, member_panel, start=REPL_START, end=REPL_END):
+def build_figure2(results, member_panel, start=REPL_START, end=REPL_END, title=TITLE):
     """Return the Figure 2 chart (matplotlib Figure)."""
     med = cross_sectional_medians(results, member_panel, start, end)
     mkt = market_series(results, start, end)
@@ -76,7 +78,7 @@ def build_figure2(results, member_panel, start=REPL_START, end=REPL_END):
     ax.plot(mkt["date"], mkt["bound_lower"], color=C_MARKET, lw=1.0, label="Market")
 
     paper_style(ax, ymax, y_floor=0.27, y_minor=0.025)
-    ax.set_title("Cross-Sectional Median Bounds and the S&P 500 Index", fontsize=12, pad=10)
+    ax.set_title(title, fontsize=12, pad=10)
     ax.set_ylabel("Probability of a 20% Crash")
     ax.legend(title="Probability:", frameon=False, loc="upper right")
     fig.tight_layout()
@@ -87,6 +89,11 @@ if __name__ == "__main__":
     from sp500_secid_universe import load_sp500_secid_universe
 
     results = pd.read_parquet(OUTPUT_DIR / "results.parquet")
-    fig = build_figure2(results, load_sp500_secid_universe())
-    fig.savefig(OUTPUT_DIR / "fig2_median_bounds_market.png", dpi=150, bbox_inches="tight")
-    print(f"wrote {OUTPUT_DIR / 'fig2_median_bounds_market.png'}")
+    universe = load_sp500_secid_universe()
+    # Replication window (1996-2022).
+    build_figure2(results, universe).savefig(
+        OUTPUT_DIR / "fig2_median_bounds_market.png", dpi=150, bbox_inches="tight")
+    # Extension through the most recent data.
+    build_figure2(results, universe, end=EXT_END, title=TITLE + " (extended sample)").savefig(
+        OUTPUT_DIR / "fig2_median_bounds_market_ext.png", dpi=150, bbox_inches="tight")
+    print("wrote fig2_median_bounds_market.png and fig2_median_bounds_market_ext.png")

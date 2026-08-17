@@ -25,6 +25,7 @@ OUTPUT_DIR = Path(config("OUTPUT_DIR"))
 
 REPL_START = pd.Timestamp("1996-01-01")
 REPL_END = pd.Timestamp("2022-12-31")
+EXT_END = pd.Timestamp("2025-12-31")  # extension: through the most recent data
 N_BOOT = 2500
 SEED = 0
 
@@ -190,7 +191,15 @@ if __name__ == "__main__":
     from sp500_secid_universe import load_sp500_secid_universe
 
     results = pd.read_parquet(OUTPUT_DIR / "results.parquet")
-    stats = run_table2(results, load_sp500_secid_universe())
+    universe = load_sp500_secid_universe()
+
+    # Replication window (1996-2022).
+    stats = run_table2(results, universe)
     stats.to_csv(OUTPUT_DIR / "table2.csv", index=False)
     (OUTPUT_DIR / "table2.tex").write_text(to_latex(stats))
+
+    # Extension through the most recent data.
+    stats_ext = run_table2(results, universe, end=EXT_END)
+    stats_ext.to_csv(OUTPUT_DIR / "table2_ext.csv", index=False)
+    (OUTPUT_DIR / "table2_ext.tex").write_text(to_latex(stats_ext))
     print(stats[["q", "measure", "horizon", "beta", "r2"]].to_string(index=False))
