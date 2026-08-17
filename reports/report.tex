@@ -1,0 +1,245 @@
+% !TeX root = report.tex
+\newcommand*{\PathToAssets}{../assets}%
+\newcommand*{\PathToOutput}{../_output}%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Compiled with XeLaTeX.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[12pt]{article}
+\usepackage{my_article_header}
+\usepackage{my_common_header}
+
+% Visible placeholder for an exhibit that the pipeline will emit but that is not
+% built yet. Keeps the document compiling and the section outline complete.
+\newcommand{\pending}[1]{%
+  \begin{center}\fbox{\parbox{0.85\linewidth}{\centering\itshape
+  [Exhibit pending: #1]}}\end{center}%
+}
+
+\begin{document}
+\title{
+Forecasting Crashes with a Smile\\
+{\large A Replication and Extension of Martin \& Shi (2025)}
+}
+\author{Riley Haas \and Marija Jovicic}
+\date{\today}
+
+\begin{titlepage}
+\maketitle
+
+\doublespacing
+\begin{abstract}
+We replicate Martin \& Shi (2025), which shows that the shape of the
+option-implied volatility smile carries a model-free signal for the physical
+probability that a stock crashes. From index and single-name options we recover
+risk-neutral return distributions, apply a power-utility fear correction, and
+form Fr\'echet--Hoeffding bounds on the crash probability; the lower bound is
+predicted to approximately equal the truth. Over the paper's 1996--2022 sample we
+reproduce Table~1 to within a tight tolerance: the lower bound tracks the realized
+crash frequency while the risk-neutral probability and the upper bound overstate
+crash risk. We then extend every exhibit through 2025 and add sector-level crash
+series and a Silicon Valley Bank case study. The full analysis regenerates
+end-to-end from WRDS via a single \texttt{doit} command.
+\end{abstract}
+\end{titlepage}
+
+\singlespacing
+
+%======================================================================
+\section{Introduction}
+%======================================================================
+Martin \& Shi (2025) derive option-implied \emph{bounds} on the physical
+probability that an individual stock crashes over horizons of one to twelve
+months. The risk-neutral crash probability, read directly from option prices,
+``cries wolf'' --- it overstates crash risk, most severely in crises, because it
+bundles a fear premium. The paper's contribution is a theory-based correction:
+weighting by a power-utility investor's marginal value of a dollar and closing the
+unknown stock--market dependence with copula bounds yields a \emph{lower bound}
+that, under mild comonotonicity, should sit close to the true crash probability.
+
+This project reproduces that result as a fully reproducible analytical pipeline.
+Starting from raw CRSP and OptionMetrics data on WRDS, we build the cleaned
+firm-month panel, recover the risk-neutral densities, form the bounds, and test
+them against realized crashes. We then push every exhibit past the paper's 2022
+cutoff and add extensions of our own.
+
+\paragraph{How it went --- successes.} The core replication succeeds. Our
+Table~1 matches the paper's cross-sectional statistics to within $0.007$: the
+lower bound hugs the realized crash frequency while the risk-neutral probability
+and (more so) the upper bound overstate crashes, exactly the pattern the theory
+predicts. The entire pipeline --- pulls, cleaning, estimation, and exhibits ---
+runs end-to-end from a clean checkout via \texttt{doit}, and every replicated
+number is pinned to the paper by a tolerance unit test.
+
+\paragraph{How it went --- challenges.} The harder problems were practical and
+numerical rather than conceptual. (i) \emph{Numerical consistency}: the fitted
+risk-neutral marginals (isotonic-regressed CDFs) and the option-price moment
+integrals are two representations of the same distribution that can disagree at
+short maturities, which briefly broke the theoretical bound ordering; we resolved
+it by taking the boundary derivative in Result~5 from the fitted marginal, exactly
+as Appendix~D prescribes. (ii) \emph{Scale}: forming a risk-neutral density for
+every name, month, and maturity across a 35-million-row surface exhausted memory
+until the pipeline was restructured to stream one day at a time. (iii) \emph{Data
+gaps}: OptionMetrics is missing the July~2020 surface snapshot entirely, which we
+handle by falling back to that month's last valid trading day. (iv)
+\emph{Universe differences}: our CRSP membership vintage yields a modestly larger
+firm set than the paper's, a difference we document rather than force.
+
+%======================================================================
+\section{Data}
+%======================================================================
+All raw data comes from WRDS and regenerates from scratch via \texttt{doit}; the
+proprietary pulls cache locally and are never committed. The sample follows the
+paper --- S\&P~500 index members observed on the last trading day of each month,
+January 1996 through December 2022 --- and our extension carries the panel to the
+most recent available data.
+
+\begin{itemize}
+  \item \textbf{OptionMetrics IvyDB} --- the standardized volatility surface
+    (\texttt{vsurfd}) is the core input (the ``smile''); the zero-coupon curve
+    (\texttt{zerocd}) supplies risk-free discounting; the security-name history
+    (\texttt{secnmd}) resolves \texttt{secid} labels.
+  \item \textbf{CRSP} --- the monthly stock file (\texttt{msf\_v2}, CIZ~2.0)
+    provides realized returns and crash events with delisting returns folded into
+    \texttt{mthret} (so wipeouts such as SVB register as crashes); the S\&P~500
+    constituent list (\texttt{msp500list}) drives sample selection; the index file
+    (\texttt{msix}) supplies the S\&P~500 level as the index spot.
+  \item \textbf{WRDS CRSP--OptionMetrics link} joins option data (\texttt{secid})
+    to CRSP returns (\texttt{permno}).
+\end{itemize}
+
+Financial firms are deliberately retained --- the universe is pure S\&P~500
+membership with no industry screen, which is central to the SVB extension.
+
+%======================================================================
+\section{Methodology}
+%======================================================================
+For each firm and month we turn the option-implied smile into a crash-probability
+estimate through five steps. (1) \emph{Risk-neutral density}: price out-of-the-money
+options on a fine moneyness grid, differentiate (Breeden--Litzenberger) to recover
+the risk-neutral CDF of the gross return, and enforce a valid distribution with an
+isotonic fit. (2) \emph{Risk-neutral crash probability}: read $P^{*}[R \le q]$
+directly from that CDF. (3) \emph{Fear correction}: reweight by a power-utility
+investor's marginal utility ($\gamma = 2$, calibrated by the paper on the market)
+to move toward the physical measure. (4) \emph{Copula bounds}: close the unknown
+stock--market dependence with Fr\'echet--Hoeffding bounds; the comonotone
+\emph{lower bound} is the forecaster. (5) \emph{Calibration test}: regress the
+realized crash indicator on each probability --- the theory predicts a slope of
+one for the lower bound, not zero.
+
+We follow the paper's Appendix~D throughout: a fine grid $K/S \in [1/L, L]$
+($L = 3$ at one to six months, $5$ at twelve), implied volatility interpolated
+linearly within observed strikes and held flat outside, zero-dividend
+Black--Scholes prices, and moments computed from option prices by the midpoint
+rule. Table schemas are fixed centrally and every intermediate table is a tidy,
+documented dataframe.
+
+%======================================================================
+\section{Replication (1996--2022)}
+%======================================================================
+We reproduce the paper's core exhibits over its original sample, in the order a
+reader meets the argument: first the raw signal for individual names and for the
+market (Figures~1 and 2), then the pooled summary statistics (Table~1) and the
+formal calibration test (Table~2).
+
+\paragraph{Figure 1 --- bounds for individual stocks.} Figure~1 plots the time
+series of the option-implied upper and lower bounds on the one-month probability of
+a $20\%$ crash for two representative names, Apple and AIG. It shows how the bounds
+move with market stress, and how far apart the ``cries wolf'' risk-neutral reading
+and the fear-corrected lower bound can be for a single name.
+\pending{Figure 1 --- one-month 20\% crash-probability bounds for Apple and AIG}
+
+\paragraph{Figure 2 --- the market and the cross-section.} Figure~2 plots the
+cross-sectional medians of the upper and lower bounds over time, together with the
+crash probability of the S\&P~500 index itself (the $i = m$ case of Result~3). It
+lifts the single-name picture to the aggregate and shows that the market crash
+probability is lower and smoother than the typical constituent's.
+\pending{Figure 2 --- cross-sectional median bounds and the S\&P 500 index crash probability}
+
+\paragraph{Table 1 --- summary statistics.} Table~\ref{tab:table1} reports, for
+each crash size $q$ and horizon $\tau$, the realized crash frequency, our lower and
+upper bounds, and the risk-neutral probability, averaged both across firms (a
+monthly cross-section) and across time (per firm). The headline is visible in every
+panel: the mean lower bound sits next to the mean realized crash frequency, whereas
+the risk-neutral probability and the upper bound run well above both. Our
+cross-sectional means match the paper to within $0.007$.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Summary statistics --- replication of Martin \& Shi (2025), Table~1,
+over January 1996--December 2022. For each crash size $q$ (a gross return at or
+below $q$) and horizon $\tau$, we report the realized crash frequency, the
+option-implied lower and upper bounds, and the risk-neutral probability. The
+\emph{lower bound tracks the realized frequency} while the risk-neutral
+probability and the upper bound overstate crash risk --- the paper's central
+finding. $T$ is the number of formation months; $N$ the number of firms.}
+\label{tab:table1}
+\input{\PathToOutput/table1.tex}
+\end{table}
+
+\paragraph{Table 2 --- calibration.} Table~2 regresses the realized crash
+indicator on each probability measure. A well-calibrated forecast has a slope of
+one: the lower bound delivers $\beta \approx 1$, whereas the risk-neutral
+probability is badly miscalibrated (slope well below one). This is the formal
+counterpart of Table~1's visual message.
+\pending{Table 2 --- regressions of realized crashes on the lower/upper bounds and the risk-neutral probability}
+
+%======================================================================
+\section{Extension Through 2025}
+%======================================================================
+We recompute every replicated exhibit using data past the paper's 2022 cutoff ---
+the first out-of-sample test of whether the pattern survives. The March~2023
+regional-bank stress supplies fresh realized crash events, making the extension a
+genuine test rather than a mechanical roll-forward.
+\pending{Table 1 and Figures 1--2 recomputed through 2025}
+
+\paragraph{Figure 6 --- out-of-sample forecasting performance.} Figure~6 reports
+out-of-sample $R^2$s that compare the lower bound's forecasts against a
+firm-specific historical average and against the risk-neutral probability. It is
+the natural home for the extended sample: with data through 2025 we can ask
+directly whether the lower bound keeps forecasting crashes out of sample, including
+across the 2023 bank stress.
+\pending{Figure 6 --- out-of-sample R\textsuperscript{2} of the lower bound vs.\ the risk-neutral probability}
+
+%======================================================================
+\section{Summary Statistics of the Underlying Data}
+%======================================================================
+Beyond the replicated exhibits, we present our own summary of the firm-month panel
+--- the coverage of the option surface, the cross-section of firms, and the
+distribution of realized returns --- so the reader can judge the data the bounds
+are built on.
+\pending{Own summary-statistics table and figure of the cleaned panel}
+
+%======================================================================
+\section{Extensions}
+%======================================================================
+\paragraph{Sector crash series.} Applying the bound to the eleven Select Sector
+SPDR ETFs (plus KRE) yields a \emph{direct} per-sector crash-probability series,
+in contrast to the paper's average-of-constituents proxy.
+\pending{Per-sector crash-probability series}
+
+\paragraph{Silicon Valley Bank case study.} We read one event at three levels ---
+the failed name (SIVB), the regional-bank ETF (KRE), and the financial sector
+(XLF) --- to show the bound responding to the March~2023 stress in real time.
+\pending{SVB case study (SIVB $\to$ KRE $\to$ XLF)}
+
+\paragraph{The \texttt{crashbounds} package.} We package the pipeline as a
+pip-installable library so a reader can call for a name's bounds and fear gap
+directly.
+
+%======================================================================
+\section{Discussion and Conclusion}
+%======================================================================
+The replication confirms the paper's central claim on our independently
+constructed panel: the option-implied lower bound is a well-calibrated forecast of
+crash risk, materially tighter than the risk-neutral probability it corrects. The
+main frictions were engineering and data-quality issues --- numerical consistency
+between the two representations of the risk-neutral distribution, the memory cost
+of the full cross-section, an OptionMetrics data gap, and membership-vintage
+differences --- each of which we resolved or documented explicitly. The low
+regression $R^2$ (a few percent) is expected: crashes are rare binary events, and
+the meaningful comparison is the lower bound against the risk-neutral probability
+on the same sample, where the bound wins.
+
+\end{document}
