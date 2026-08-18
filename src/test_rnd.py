@@ -152,7 +152,9 @@ def test_crash_prob_is_monotone_in_horizon():
     moneyness = np.linspace(0.5, 1.5, 9)
     probs = []
     for days in schema.MATURITIES_DAYS:
-        slice_ = _surface_slice(moneyness, np.full_like(moneyness, 0.25), days_to_maturity=days)
+        slice_ = _surface_slice(
+            moneyness, np.full_like(moneyness, 0.25), days_to_maturity=days
+        )
         cdf = risk_neutral_cdf(slice_, RATE)
         probs.append(risk_neutral_crash_prob(cdf, 0.80))
     assert probs == sorted(probs)

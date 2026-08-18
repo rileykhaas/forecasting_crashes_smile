@@ -164,28 +164,30 @@ def tightness_table(
         dl = float(d["bound_lower"].mean())
         rf = float(realized.astype(float).mean()) if len(realized) else float("nan")
         rows.append(
-            dict(
-                sector=sector,
-                ticker=ticker,
-                clean=sector in CLEAN_SECTORS,
-                proxy_lower=pl,
-                direct_lower=dl,
-                realized_freq=rf,
-                proxy_gap=pl - rf,
-                direct_gap=dl - rf,
-            )
+            {
+                "sector": sector,
+                "ticker": ticker,
+                "clean": sector in CLEAN_SECTORS,
+                "proxy_lower": pl,
+                "direct_lower": dl,
+                "realized_freq": rf,
+                "proxy_gap": pl - rf,
+                "direct_gap": dl - rf,
+            }
         )
     return pd.DataFrame(rows)
 
 
 def to_latex(table, threshold_q=THRESHOLD_Q, horizon=HORIZON):
     """Render the tightness table as a LaTeX tabular."""
-    drop = int(round((1 - threshold_q) * 100))
+    drop = round((1 - threshold_q) * 100)
     lines = [
         r"\begin{tabular}{llrrrrr}",
         r"\toprule",
-        r"Sector (FF49) & ETF & Proxy $\overline{P^L}$ & Direct $\overline{P^L}$ "
-        r"& Realized & Proxy$-$Real. & Direct$-$Real. \\",
+        (
+            r"Sector (FF49) & ETF & Proxy $\overline{P^L}$ & Direct $\overline{P^L}$ "
+            r"& Realized & Proxy$-$Real. & Direct$-$Real. \\"
+        ),
         rf" & & (avg. of names) & (ETF) & ({horizon}-mo. {drop}\%) & & \\",
         r"\midrule",
     ]

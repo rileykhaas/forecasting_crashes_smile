@@ -11,12 +11,14 @@ invariant is checked before writing.
 
 import pandas as pd
 
+import schema
 from bounds import crash_bounds
 from rnd import risk_neutral_cdf
 from settings import config
-import schema
 
-DAYS_TO_HORIZON = {days: months for months, days in schema.HORIZON_TO_MATURITY_DAYS.items()}
+DAYS_TO_HORIZON = {
+    days: months for months, days in schema.HORIZON_TO_MATURITY_DAYS.items()
+}
 
 
 def run_pipeline(clean_surface, rates, realized_returns):

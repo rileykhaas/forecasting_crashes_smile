@@ -73,7 +73,9 @@ def weighted_tail_expectation(index_cdf, rate, k_level, tail, gamma=GAMMA):
         # which is inconsistent with the q_l that Result 3 derives from the fitted
         # Q_m, and breaks P^L <= P* at short maturities.
         put_prime_at_k = float(index_cdf(k_level)) / forward
-        boundary = forward * k_level**gamma * (put_prime_at_k - gamma * put_at_k / k_level)
+        boundary = (
+            forward * k_level**gamma * (put_prime_at_k - gamma * put_at_k / k_level)
+        )
         integral = _midpoint_integral(grid, kernel * put_grid, grid <= k_level)
         return boundary + forward * integral
 
@@ -82,8 +84,8 @@ def weighted_tail_expectation(index_cdf, rate, k_level, tail, gamma=GAMMA):
         # Symmetric to the lower tail: Appendix D defines Q_m(K) = Rf * call'(K) + 1
         # on the OTM-call side, so call'(k) = (Q_m(k) - 1)/Rf from the fitted CDF.
         call_prime_at_k = (float(index_cdf(k_level)) - 1.0) / forward
-        boundary = forward * k_level**gamma * (
-            gamma * call_at_k / k_level - call_prime_at_k
+        boundary = (
+            forward * k_level**gamma * (gamma * call_at_k / k_level - call_prime_at_k)
         )
         integral = _midpoint_integral(grid, kernel * call_grid, grid >= k_level)
         return boundary + forward * integral

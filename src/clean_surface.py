@@ -31,9 +31,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from settings import config
-from schema import SPX_SECID
 import schema
+from schema import SPX_SECID
+from settings import config
 
 DATA_DIR = Path(config("DATA_DIR"))
 
@@ -168,16 +168,20 @@ def load_clean_surface(data_dir=DATA_DIR):
 
 
 if __name__ == "__main__":
-    from pull_optionmetrics import load_option_pull_secids, load_vol_surface
-    from pull_CRSP_stock import load_CRSP_monthly_file, load_CRSP_index_files
+    from pull_CRSP_stock import load_CRSP_index_files, load_CRSP_monthly_file
     from pull_link import load_crsp_optionm_link
+    from pull_optionmetrics import load_option_pull_secids, load_vol_surface
     from sp500_secid_universe import load_sp500_secid_universe
 
     # Extension ETFs (#34): [secid, permno] map for the sector_etf secids.
     manifest = load_option_pull_secids()
-    etf_secids = set(manifest.loc[manifest["source"] == "sector_etf", "secid"].astype(int))
+    etf_secids = set(
+        manifest.loc[manifest["source"] == "sector_etf", "secid"].astype(int)
+    )
     link = load_crsp_optionm_link()
-    etf_link = link.loc[link["secid"].isin(etf_secids), ["secid", "permno"]].drop_duplicates()
+    etf_link = link.loc[
+        link["secid"].isin(etf_secids), ["secid", "permno"]
+    ].drop_duplicates()
 
     spot = build_spot_by_month(
         load_sp500_secid_universe(),

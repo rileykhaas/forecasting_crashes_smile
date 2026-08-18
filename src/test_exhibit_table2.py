@@ -39,10 +39,18 @@ def _synthetic_results(n_months=36):
             for q in schema.THRESHOLDS_Q:
                 for h in schema.HORIZONS_MONTHS:
                     lo = rng.uniform(0, 0.2)
-                    rows.append(dict(date=date, secid=secid, threshold_q=q, horizon_months=h,
-                                     bound_lower=lo, prob_riskneutral=lo + 0.05,
-                                     bound_upper=lo + 0.1,
-                                     realized_flag=int(rng.random() < lo)))
+                    rows.append(
+                        {
+                            "date": date,
+                            "secid": secid,
+                            "threshold_q": q,
+                            "horizon_months": h,
+                            "bound_lower": lo,
+                            "prob_riskneutral": lo + 0.05,
+                            "bound_upper": lo + 0.1,
+                            "realized_flag": int(rng.random() < lo),
+                        }
+                    )
     return pd.DataFrame(rows)
 
 
@@ -54,12 +62,26 @@ def _members(n_months=36):
 
 
 def test_run_table2_shape_and_columns():
-    stats = run_table2(_synthetic_results(), _members(),
-                       start=pd.Timestamp("2004-01-01"), end=pd.Timestamp("2010-12-31"),
-                       n_boot=50)
+    stats = run_table2(
+        _synthetic_results(),
+        _members(),
+        start=pd.Timestamp("2004-01-01"),
+        end=pd.Timestamp("2010-12-31"),
+        n_boot=50,
+    )
     # 3 thresholds x 3 measures x 4 horizons
     assert len(stats) == 3 * 3 * 4
-    assert {"q", "measure", "horizon", "alpha", "beta", "r2",
-            "alpha_se_cl", "alpha_se_bs", "beta_se_cl", "beta_se_bs"} <= set(stats.columns)
+    assert {
+        "q",
+        "measure",
+        "horizon",
+        "alpha",
+        "beta",
+        "r2",
+        "alpha_se_cl",
+        "alpha_se_bs",
+        "beta_se_cl",
+        "beta_se_bs",
+    } <= set(stats.columns)
     # the index (secid 108105) is excluded by the member-panel join, so nothing blew up
     assert stats["beta"].notna().all()

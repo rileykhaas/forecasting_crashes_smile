@@ -9,8 +9,8 @@ builds that many rows.
 import pandas as pd
 
 import schema
-from schema import SPX_SECID
 from clean_surface import build_spot_by_month, clean_surface
+from schema import SPX_SECID
 
 
 def _raw(secid=1, date="2020-01-31", days=30, n=12, dispersion=0.01, strike0=90.0):
@@ -104,7 +104,7 @@ def test_build_spot_names_and_index():
     assert by[SPX_SECID] == 3200.0
 
 
-def test_build_spot_includes_etfs(): # sector-ETF extension (#34)
+def test_build_spot_includes_etfs():  # sector-ETF extension (#34)
     """With an etf_link, each ETF gets a CRSP |prc| spot for the months it traded,
     alongside constituents and the index."""
     universe = pd.DataFrame(
@@ -121,9 +121,9 @@ def test_build_spot_includes_etfs(): # sector-ETF extension (#34)
     etf_link = pd.DataFrame({"secid": [110012], "permno": [999]})  # XLF-like
     spot = build_spot_by_month(universe, crsp, idx, etf_link=etf_link)
     by = dict(zip(spot["secid"], spot["spot_price"]))
-    assert by[5] == 50.0          # constituent
+    assert by[5] == 50.0  # constituent
     assert by[SPX_SECID] == 3200.0  # index
-    assert by[110012] == 42.0     # ETF, via its own permno
+    assert by[110012] == 42.0  # ETF, via its own permno
     # Without an etf_link the ETF is absent (paper's constituents+index scope).
     assert 110012 not in set(build_spot_by_month(universe, crsp, idx)["secid"])
 

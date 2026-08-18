@@ -210,8 +210,11 @@ df = data.load(pipeline="sales", dataframe="sales_data", format="polars_eager")
 df = data.load(pipeline="sales", dataframe="sales_data", format="pandas")
 
 # Load with explicit catalog path
-lf = data.load(pipeline="sales", dataframe="sales_data",
-               catalog_path="/path/to/catalog/chartbook.toml")
+lf = data.load(
+    pipeline="sales",
+    dataframe="sales_data",
+    catalog_path="/path/to/catalog/chartbook.toml",
+)
 
 # Get data file path
 path = data.get_data_path(pipeline="sales", dataframe="sales_data")

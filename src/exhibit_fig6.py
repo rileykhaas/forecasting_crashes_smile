@@ -30,13 +30,13 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")  # headless: save files, never open a window
-import matplotlib.dates as mdates  # noqa: E402
-import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.ticker import FixedLocator, MaxNLocator  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib.ticker import FixedLocator, MaxNLocator
 
-from settings import config  # noqa: E402
+from settings import config
 
 OUTPUT_DIR = Path(config("OUTPUT_DIR"))
 
@@ -50,8 +50,8 @@ REPL_END = pd.Timestamp("2022-12-31")
 EXT_END = pd.Timestamp("2025-12-31")  # extension: through the most recent data
 TITLE = "Out-of-Sample $R^2$: the Lower Bound vs. the Risk-Neutral Forecasts"
 
-C_LB = "#e46fb0"   # pink  -- OIB-LB
-C_RN = "#4f9ed6"   # light blue -- raw risk-neutral
+C_LB = "#e46fb0"  # pink  -- OIB-LB
+C_RN = "#4f9ed6"  # light blue -- raw risk-neutral
 C_ADJ = "#12276e"  # dark navy  -- adjusted risk-neutral
 
 
@@ -77,7 +77,7 @@ def _firm_benchmark(df, tau):
         idx = _month_index(g["date"])  # integer month index, robust to month-end/gaps
         csum = np.concatenate([[0.0], np.cumsum(g["y"].to_numpy(float))])
         k = np.searchsorted(idx, idx - tau, side="right")  # # observable prior origins
-        out[pos:pos + len(g)] = np.where(k > 0, csum[k] / np.maximum(k, 1), np.nan)
+        out[pos : pos + len(g)] = np.where(k > 0, csum[k] / np.maximum(k, 1), np.nan)
         pos += len(g)
     df["bench"] = out
     return df
@@ -87,10 +87,17 @@ def _monthly_suff_stats(df):
     """Per origin-month pooled sufficient statistics for OLS of y on the
     risk-neutral probability (n, sum x, sum y, sum x^2, sum xy), sorted by date."""
     d = df.assign(_xx=df["RN"] ** 2, _xy=df["RN"] * df["y"])
-    return d.groupby("date").agg(
-        n=("y", "size"), Sx=("RN", "sum"), Sy=("y", "sum"),
-        Sxx=("_xx", "sum"), Sxy=("_xy", "sum"),
-    ).sort_index()
+    return (
+        d.groupby("date")
+        .agg(
+            n=("y", "size"),
+            Sx=("RN", "sum"),
+            Sy=("y", "sum"),
+            Sxx=("_xx", "sum"),
+            Sxy=("_xy", "sum"),
+        )
+        .sort_index()
+    )
 
 
 def _ols_from_suff(n, Sx, Sy, Sxx, Sxy):
@@ -111,22 +118,36 @@ def _trailing_coeffs(stats, tau, rolling_years=None):
     """
     sm = stats.index.to_numpy()  # sorted origin-month dates (datetime64)
     sidx = _month_index(stats.index)  # matching integer month indices
-    ccum = np.vstack([np.zeros(5),
-                      np.cumsum(stats[["n", "Sx", "Sy", "Sxx", "Sxy"]].to_numpy(), axis=0)])
+    ccum = np.vstack(
+        [
+            np.zeros(5),
+            np.cumsum(stats[["n", "Sx", "Sy", "Sxx", "Sxy"]].to_numpy(), axis=0),
+        ]
+    )
     a_out, b_out = [], []
     for ti in sidx:
         hi = np.searchsorted(sidx, ti - tau, side="right")
-        lo = 0 if rolling_years is None else np.searchsorted(
-            sidx, ti - tau - 12 * rolling_years, side="right")
+        lo = (
+            0
+            if rolling_years is None
+            else np.searchsorted(sidx, ti - tau - 12 * rolling_years, side="right")
+        )
         a, b = _ols_from_suff(*(ccum[hi] - ccum[lo]))
         a_out.append(a)
         b_out.append(b)
     return pd.DataFrame({"date": sm, "alpha": a_out, "beta": b_out})
 
 
-def compute_oos_r2(results, member_panel, tau, threshold_q=THRESHOLD_Q,
-                   start=REPL_START, end=REPL_END, burn_in_years=BURN_IN_YEARS,
-                   rolling_years=ROLLING_YEARS):
+def compute_oos_r2(
+    results,
+    member_panel,
+    tau,
+    threshold_q=THRESHOLD_Q,
+    start=REPL_START,
+    end=REPL_END,
+    burn_in_years=BURN_IN_YEARS,
+    rolling_years=ROLLING_YEARS,
+):
     """Cumulative out-of-sample R^2 time series for horizon ``tau``.
 
     Returns a DataFrame indexed by *evaluation date* T = origin + tau months, with
@@ -137,8 +158,12 @@ def compute_oos_r2(results, member_panel, tau, threshold_q=THRESHOLD_Q,
     members = member_panel[["date", "secid"]].dropna(subset=["secid"]).copy()
     members["secid"] = members["secid"].astype("int64")
     df = results.merge(members.drop_duplicates(), on=["date", "secid"], how="inner")
-    df = df[(df["threshold_q"] == threshold_q) & (df["horizon_months"] == tau)
-            & df["realized_flag"].notna() & df["date"].le(end)].copy()
+    df = df[
+        (df["threshold_q"] == threshold_q)
+        & (df["horizon_months"] == tau)
+        & df["realized_flag"].notna()
+        & df["date"].le(end)
+    ].copy()
     df["y"] = df["realized_flag"].astype(float)
     df["RN"] = df["prob_riskneutral"].astype(float)
     df["LB"] = df["bound_lower"].astype(float)
@@ -147,16 +172,22 @@ def compute_oos_r2(results, member_panel, tau, threshold_q=THRESHOLD_Q,
     df = _firm_benchmark(df, tau)
     stats = _monthly_suff_stats(df)
     exp = _trailing_coeffs(stats, tau, rolling_years=None).rename(
-        columns={"alpha": "a_exp", "beta": "b_exp"})
+        columns={"alpha": "a_exp", "beta": "b_exp"}
+    )
     roll = _trailing_coeffs(stats, tau, rolling_years=rolling_years).rename(
-        columns={"alpha": "a_roll", "beta": "b_roll"})
+        columns={"alpha": "a_roll", "beta": "b_roll"}
+    )
     df = df.merge(exp, on="date", how="left").merge(roll, on="date", how="left")
     df["F_adj_exp"] = df["a_exp"] + df["b_exp"] * df["RN"]
     df["F_adj_roll"] = df["a_roll"] + df["b_roll"] * df["RN"]
 
     oos_start = SAMPLE_START + pd.DateOffset(years=burn_in_years)
-    scored = df[df["date"].ge(oos_start) & df["bench"].notna()
-                & df["F_adj_exp"].notna() & df["F_adj_roll"].notna()].copy()
+    scored = df[
+        df["date"].ge(oos_start)
+        & df["bench"].notna()
+        & df["F_adj_exp"].notna()
+        & df["F_adj_roll"].notna()
+    ].copy()
 
     se = pd.DataFrame({"date": scored["date"]})
     se["bench"] = (scored["y"] - scored["bench"]) ** 2
@@ -175,13 +206,16 @@ def compute_oos_r2(results, member_panel, tau, threshold_q=THRESHOLD_Q,
 
 def _style_panel(ax, ylo, yhi, xstart, xend):
     """Apply the paper's small-multiple axis look (grid, spines, biennial-ish ticks)."""
-    ax.axhline(0.0, color="#9a9a9a", lw=0.8, ls=(0, (4, 3)), zorder=1)  # dashed zero line
+    ax.axhline(
+        0.0, color="#9a9a9a", lw=0.8, ls=(0, (4, 3)), zorder=1
+    )  # dashed zero line
     ax.margins(x=0)
     ax.set_xlim(xstart, xend)
     ax.set_ylim(ylo, yhi)
     years = [y for y in range(2002, xend.year + 1, 8)]
-    ax.xaxis.set_major_locator(FixedLocator(mdates.date2num(
-        [pd.Timestamp(f"{y}-01-01") for y in years])))
+    ax.xaxis.set_major_locator(
+        FixedLocator(mdates.date2num([pd.Timestamp(f"{y}-01-01") for y in years]))
+    )
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
     ax.xaxis.set_minor_locator(mdates.YearLocator(2))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=6, steps=[1, 2, 5, 10]))
@@ -193,11 +227,19 @@ def _style_panel(ax, ylo, yhi, xstart, xend):
         spine.set_linewidth(0.8)
 
 
-def build_figure6(results, member_panel, start=REPL_START, end=REPL_END, title=TITLE,
-                  threshold_q=THRESHOLD_Q):
+def build_figure6(
+    results,
+    member_panel,
+    start=REPL_START,
+    end=REPL_END,
+    title=TITLE,
+    threshold_q=THRESHOLD_Q,
+):
     """Return the Figure 6 chart: a 2 (panel) x 4 (horizon) grid of R^2_oos series."""
-    series = {tau: compute_oos_r2(results, member_panel, tau, threshold_q, start, end)
-              for tau in HORIZONS}
+    series = {
+        tau: compute_oos_r2(results, member_panel, tau, threshold_q, start, end)
+        for tau in HORIZONS
+    }
     xstart, xend = start, end
 
     # Shared y-top per column (both panels); per-subplot floor (0 unless it dips below).
@@ -207,25 +249,51 @@ def build_figure6(results, member_panel, start=REPL_START, end=REPL_END, title=T
     col_top = {}
     for tau in HORIZONS:
         r2 = series[tau]
-        col_top[tau] = max(pct(r2[c]).max() for c in
-                           ["OIB_LB", "RN_raw", "RN_adj_exp", "RN_adj_roll"])
+        col_top[tau] = max(
+            pct(r2[c]).max() for c in ["OIB_LB", "RN_raw", "RN_adj_exp", "RN_adj_roll"]
+        )
 
     fig, axes = plt.subplots(2, 4, figsize=(15, 8), sharex="col")
-    fig.subplots_adjust(left=0.05, right=0.99, top=0.87, bottom=0.07,
-                        hspace=0.45, wspace=0.30)
-    panels = [("A", "RN_adj_exp", "Expanding-window adjustments for the risk-neutral probabilities"),
-              ("B", "RN_adj_roll", "3-year rolling-window adjustments for the risk-neutral probabilities")]
+    fig.subplots_adjust(
+        left=0.05, right=0.99, top=0.87, bottom=0.07, hspace=0.45, wspace=0.30
+    )
+    panels = [
+        (
+            "A",
+            "RN_adj_exp",
+            "Expanding-window adjustments for the risk-neutral probabilities",
+        ),
+        (
+            "B",
+            "RN_adj_roll",
+            "3-year rolling-window adjustments for the risk-neutral probabilities",
+        ),
+    ]
 
     for row, (letter, adj_col, subtitle) in enumerate(panels):
         for col, tau in enumerate(HORIZONS):
             ax = axes[row, col]
             r2 = series[tau]
             lb, rn, adj = pct(r2["OIB_LB"]), pct(r2["RN_raw"]), pct(r2[adj_col])
-            ax.plot(r2.index, rn, color=C_RN, lw=1.1, ls=(0, (6, 1, 1, 1)),
-                    label=r"RN ($\alpha=0,\beta=1$)")
-            ax.plot(r2.index, adj, color=C_ADJ, lw=1.1, ls=(0, (6, 1, 1, 1)),
-                    label=r"RN ($\hat\alpha,\hat\beta$)")
-            ax.plot(r2.index, lb, color=C_LB, lw=1.4, label=r"OIB-LB ($\alpha=0,\beta=1$)")
+            ax.plot(
+                r2.index,
+                rn,
+                color=C_RN,
+                lw=1.1,
+                ls=(0, (6, 1, 1, 1)),
+                label=r"RN ($\alpha=0,\beta=1$)",
+            )
+            ax.plot(
+                r2.index,
+                adj,
+                color=C_ADJ,
+                lw=1.1,
+                ls=(0, (6, 1, 1, 1)),
+                label=r"RN ($\hat\alpha,\hat\beta$)",
+            )
+            ax.plot(
+                r2.index, lb, color=C_LB, lw=1.4, label=r"OIB-LB ($\alpha=0,\beta=1$)"
+            )
             top = col_top[tau] * 1.06
             floor = min(adj.min(), 0.0)
             ylo = floor * 1.12 if floor < 0 else -0.02 * top
@@ -237,12 +305,23 @@ def build_figure6(results, member_panel, start=REPL_START, end=REPL_END, title=T
             if col == 0:
                 ax.set_ylabel(r"$R^2_{\mathrm{oos}}$ (%)")
             if row == 0 and col == 0:
-                ax.legend(frameon=False, fontsize=7.5, loc="lower right",
-                          handlelength=2.4, borderpad=0.2)
+                ax.legend(
+                    frameon=False,
+                    fontsize=7.5,
+                    loc="lower right",
+                    handlelength=2.4,
+                    borderpad=0.2,
+                )
         # Panel subtitle spanning the row (in the whitespace just above it).
         y = 0.925 if row == 0 else 0.455
-        fig.text(0.5, y, f"Panel {letter}: {subtitle}", ha="center",
-                 fontsize=11, style="italic")
+        fig.text(
+            0.5,
+            y,
+            f"Panel {letter}: {subtitle}",
+            ha="center",
+            fontsize=11,
+            style="italic",
+        )
 
     fig.suptitle(title, fontsize=13, y=0.985)
     return fig
@@ -255,8 +334,10 @@ if __name__ == "__main__":
     universe = load_sp500_secid_universe()
     # Replication window (1996-2022).
     build_figure6(results, universe).savefig(
-        OUTPUT_DIR / "fig6_oos_r2.png", dpi=150, bbox_inches="tight")
+        OUTPUT_DIR / "fig6_oos_r2.png", dpi=150, bbox_inches="tight"
+    )
     # Extension through the most recent data.
-    build_figure6(results, universe, end=EXT_END, title=TITLE + " (extended sample)").savefig(
-        OUTPUT_DIR / "fig6_oos_r2_ext.png", dpi=150, bbox_inches="tight")
+    build_figure6(
+        results, universe, end=EXT_END, title=TITLE + " (extended sample)"
+    ).savefig(OUTPUT_DIR / "fig6_oos_r2_ext.png", dpi=150, bbox_inches="tight")
     print("wrote fig6_oos_r2.png and fig6_oos_r2_ext.png")

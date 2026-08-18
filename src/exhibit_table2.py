@@ -35,9 +35,11 @@ MEASURES = [
     ("risk-neutral", "prob_riskneutral"),
     ("upper bound", "bound_upper"),
 ]
-PANELS = [(0.70, "A", "down by over 30%"),
-          (0.80, "B", "down by over 20%"),
-          (0.90, "C", "down by over 10%")]
+PANELS = [
+    (0.70, "A", "down by over 30%"),
+    (0.80, "B", "down by over 20%"),
+    (0.90, "C", "down by over 10%"),
+]
 
 
 def _ols(x, y):
@@ -47,7 +49,7 @@ def _ols(x, y):
     beta = ((x - xb) * (y - yb)).sum() / sxx
     alpha = yb - beta * xb
     resid = y - (alpha + beta * x)
-    r2 = 1.0 - (resid ** 2).sum() / ((y - yb) ** 2).sum()
+    r2 = 1.0 - (resid**2).sum() / ((y - yb) ** 2).sum()
     return alpha, beta, r2, resid
 
 
@@ -93,13 +95,19 @@ def _block_bootstrap_se(x, y, month, block_len, n_boot=N_BOOT, seed=SEED):
     cumulative sum -- fast and exact for the slope/intercept.
     """
     xa, ya = np.asarray(x, float), np.asarray(y, float)
-    d = pd.DataFrame({"x": xa, "y": ya, "xx": xa * xa, "xy": xa * ya, "m": np.asarray(month)})
+    d = pd.DataFrame(
+        {"x": xa, "y": ya, "xx": xa * xa, "xy": xa * ya, "m": np.asarray(month)}
+    )
     g = d.groupby("m")  # groups come out sorted by month (chronological)
-    stats = np.column_stack([g.size().to_numpy(), g[["x", "y", "xx", "xy"]].sum().to_numpy()])
+    stats = np.column_stack(
+        [g.size().to_numpy(), g[["x", "y", "xx", "xy"]].sum().to_numpy()]
+    )
     M = len(stats)
     L = int(max(1, min(block_len, M)))
     n_blocks = int(np.ceil(M / L))
-    csum = np.vstack([np.zeros(5), np.cumsum(stats, axis=0)])  # block sum = csum[s+L]-csum[s]
+    csum = np.vstack(
+        [np.zeros(5), np.cumsum(stats, axis=0)]
+    )  # block sum = csum[s+L]-csum[s]
 
     rng = np.random.default_rng(seed)
     alphas = np.empty(n_boot)
@@ -113,8 +121,9 @@ def _block_bootstrap_se(x, y, month, block_len, n_boot=N_BOOT, seed=SEED):
     return alphas.std(ddof=1), betas.std(ddof=1)
 
 
-def run_table2(results, member_panel, start=REPL_START, end=REPL_END,
-               n_boot=N_BOOT, seed=SEED):
+def run_table2(
+    results, member_panel, start=REPL_START, end=REPL_END, n_boot=N_BOOT, seed=SEED
+):
     """Return Table 2's regression results as a tidy long DataFrame.
 
     Columns: q, measure, horizon, alpha, alpha_se_cl, alpha_se_bs, beta,
@@ -133,11 +142,24 @@ def run_table2(results, member_panel, start=REPL_START, end=REPL_END,
                 d = df[(df["threshold_q"] == q) & (df["horizon_months"] == tau)]
                 x, y = d[col], d["y"]
                 alpha, beta, r2, _ = _ols(x, y)
-                a_cl, b_cl = _twoway_clustered_se(x, y, d["secid"], d["date"], alpha, beta)
+                a_cl, b_cl = _twoway_clustered_se(
+                    x, y, d["secid"], d["date"], alpha, beta
+                )
                 a_bs, b_bs = _block_bootstrap_se(x, y, d["date"], tau, n_boot, seed)
-                rows.append(dict(q=q, measure=label, horizon=tau, alpha=alpha,
-                                 alpha_se_cl=a_cl, alpha_se_bs=a_bs, beta=beta,
-                                 beta_se_cl=b_cl, beta_se_bs=b_bs, r2=r2))
+                rows.append(
+                    {
+                        "q": q,
+                        "measure": label,
+                        "horizon": tau,
+                        "alpha": alpha,
+                        "alpha_se_cl": a_cl,
+                        "alpha_se_bs": a_bs,
+                        "beta": beta,
+                        "beta_se_cl": b_cl,
+                        "beta_se_bs": b_bs,
+                        "r2": r2,
+                    }
+                )
     return pd.DataFrame(rows)
 
 
@@ -146,14 +168,18 @@ def _cells(stats, q, field):
     out = []
     for label, _ in MEASURES:
         for tau in schema.HORIZONS_MONTHS:
-            m = stats[(stats["q"] == q) & (stats["measure"] == label)
-                      & (stats["horizon"] == tau)]
+            m = stats[
+                (stats["q"] == q)
+                & (stats["measure"] == label)
+                & (stats["horizon"] == tau)
+            ]
             out.append(float(m[field].iloc[0]))
     return out
 
 
 def to_latex(stats):
     """Render Table 2 as a LaTeX tabular matching the paper's layout."""
+
     def row(vals, fmt):
         return " & ".join(fmt(v) for v in vals)
 
@@ -165,15 +191,19 @@ def to_latex(stats):
     lines = [
         r"\begin{tabular}{l" + "rrrr" * 3 + "}",
         r"\toprule",
-        r" & \multicolumn{4}{c}{lower bound} & \multicolumn{4}{c}{risk-neutral}"
-        r" & \multicolumn{4}{c}{upper bound} \\",
+        (
+            r" & \multicolumn{4}{c}{lower bound} & \multicolumn{4}{c}{risk-neutral}"
+            r" & \multicolumn{4}{c}{upper bound} \\"
+        ),
         r"horizon & 1 & 3 & 6 & 12 & 1 & 3 & 6 & 12 & 1 & 3 & 6 & 12 \\",
         r"\midrule",
     ]
     for q, letter, desc in PANELS:
         desc_tex = desc.replace("%", r"\%")  # backslash outside the f-string (py3.10)
-        lines.append(rf"\multicolumn{{13}}{{c}}{{Panel {letter}: $q = {q:.2f}$, "
-                     rf"{desc_tex}}} \\")
+        lines.append(
+            rf"\multicolumn{{13}}{{c}}{{Panel {letter}: $q = {q:.2f}$, "
+            rf"{desc_tex}}} \\"
+        )
         lines.append(rf"$\alpha$ & {row(_cells(stats, q, 'alpha'), num)} \\")
         lines.append(rf" & {row(_cells(stats, q, 'alpha_se_cl'), paren)} \\")
         lines.append(rf" & {row(_cells(stats, q, 'alpha_se_bs'), brack)} \\")

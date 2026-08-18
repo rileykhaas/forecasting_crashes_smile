@@ -27,20 +27,20 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")  # headless: save files, never open a window
-import matplotlib.dates as mdates  # noqa: E402
-import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.ticker import MaxNLocator  # noqa: E402
-import pandas as pd  # noqa: E402
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib.ticker import MaxNLocator
 
-import schema  # noqa: E402
-from settings import config  # noqa: E402
+import schema
+from settings import config
 
 OUTPUT_DIR = Path(config("OUTPUT_DIR"))
 DATA_DIR = Path(config("DATA_DIR"))
 
-THRESHOLD_Q = 0.80          # a 20% crash
-FIG_HORIZON = 1             # one-month crash probability for the time-series figure
-TABLE_HORIZON = 12          # 12-month horizon for the calibration table (more events)
+THRESHOLD_Q = 0.80  # a 20% crash
+FIG_HORIZON = 1  # one-month crash probability for the time-series figure
+TABLE_HORIZON = 12  # 12-month horizon for the calibration table (more events)
 REPL_START = pd.Timestamp("1996-01-01")
 REPL_END = pd.Timestamp("2022-12-31")
 EXT_END = pd.Timestamp("2025-12-31")
@@ -49,15 +49,35 @@ FIG_TITLE = "Direct Sector-ETF Crash Probabilities vs. the S&P 500"
 # Full sector names for panel titles; grid order is alphabetical by ticker with the
 # regional-bank ETF (KRE, the SVB layer) placed last.
 SECTOR_LABELS = {
-    "XLB": "Materials", "XLC": "Comm. Services", "XLE": "Energy",
-    "XLF": "Financials", "XLI": "Industrials", "XLK": "Technology",
-    "XLP": "Cons. Staples", "XLRE": "Real Estate", "XLU": "Utilities",
-    "XLV": "Health Care", "XLY": "Cons. Disc.", "KRE": "Regional Banks",
+    "XLB": "Materials",
+    "XLC": "Comm. Services",
+    "XLE": "Energy",
+    "XLF": "Financials",
+    "XLI": "Industrials",
+    "XLK": "Technology",
+    "XLP": "Cons. Staples",
+    "XLRE": "Real Estate",
+    "XLU": "Utilities",
+    "XLV": "Health Care",
+    "XLY": "Cons. Disc.",
+    "KRE": "Regional Banks",
 }
-GRID_ORDER = ["XLB", "XLC", "XLE", "XLF", "XLI", "XLK",
-              "XLP", "XLRE", "XLU", "XLV", "XLY", "KRE"]
+GRID_ORDER = [
+    "XLB",
+    "XLC",
+    "XLE",
+    "XLF",
+    "XLI",
+    "XLK",
+    "XLP",
+    "XLRE",
+    "XLU",
+    "XLV",
+    "XLY",
+    "KRE",
+]
 
-C_ETF = "#2c6fbb"     # blue -- the sector ETF's own lower bound
+C_ETF = "#2c6fbb"  # blue -- the sector ETF's own lower bound
 C_MARKET = "#9a9a9a"  # grey -- the SPX benchmark
 
 
@@ -75,55 +95,78 @@ def _series(results, secid, threshold_q, horizon, start, end):
         (results["secid"] == secid)
         & (results["threshold_q"] == threshold_q)
         & (results["horizon_months"] == horizon)
-        & (results["date"] >= start) & (results["date"] <= end)
+        & (results["date"] >= start)
+        & (results["date"] <= end)
     ]
     return d.sort_values("date")[["date", "bound_lower"]]
 
 
-def etf_summary_table(results, secid_map, threshold_q=THRESHOLD_Q,
-                      horizon=TABLE_HORIZON, start=REPL_START, end=REPL_END):
+def etf_summary_table(
+    results,
+    secid_map,
+    threshold_q=THRESHOLD_Q,
+    horizon=TABLE_HORIZON,
+    start=REPL_START,
+    end=REPL_END,
+):
     """Per-ETF (and SPX) mean bounds vs realized crash frequency at one (q, horizon).
 
     Columns [ticker, secid, mean_lower, mean_rn, mean_upper, realized_freq, n_obs].
     ``realized_freq`` is the mean of ``realized_flag`` over months with an observed
     outcome; ``n_obs`` is how many such months (short-history ETFs have fewer)."""
     rows = []
-    ordered = [(t, int(secid_map.loc[secid_map["ticker"] == t, "secid"].iloc[0]))
-               for t in GRID_ORDER if t in set(secid_map["ticker"])]
+    ordered = [
+        (t, int(secid_map.loc[secid_map["ticker"] == t, "secid"].iloc[0]))
+        for t in GRID_ORDER
+        if t in set(secid_map["ticker"])
+    ]
     ordered.append(("SPX", schema.SPX_SECID))
     for ticker, secid in ordered:
         d = results[
             (results["secid"] == secid)
             & (results["threshold_q"] == threshold_q)
             & (results["horizon_months"] == horizon)
-            & (results["date"] >= start) & (results["date"] <= end)
+            & (results["date"] >= start)
+            & (results["date"] <= end)
         ]
         realized = d["realized_flag"].dropna()
-        rows.append(dict(
-            ticker=ticker, secid=secid,
-            mean_lower=d["bound_lower"].mean(),
-            mean_rn=d["prob_riskneutral"].mean(),
-            mean_upper=d["bound_upper"].mean(),
-            realized_freq=(float(realized.astype(float).mean()) if len(realized) else float("nan")),
-            n_obs=int(len(realized)),
-        ))
+        rows.append(
+            {
+                "ticker": ticker,
+                "secid": secid,
+                "mean_lower": d["bound_lower"].mean(),
+                "mean_rn": d["prob_riskneutral"].mean(),
+                "mean_upper": d["bound_upper"].mean(),
+                "realized_freq": (
+                    float(realized.astype(float).mean())
+                    if len(realized)
+                    else float("nan")
+                ),
+                "n_obs": len(realized),
+            }
+        )
     return pd.DataFrame(rows)
 
 
 def to_latex(table, threshold_q=THRESHOLD_Q, horizon=TABLE_HORIZON):
     """Render the ETF calibration table as a LaTeX tabular."""
-    drop = int(round((1 - threshold_q) * 100))
+    drop = round((1 - threshold_q) * 100)
     lines = [
         r"\begin{tabular}{llrrrrr}",
         r"\toprule",
-        r"Sector & Ticker & $\overline{P^L}$ & $\overline{P^*}$ & $\overline{P^U}$ "
-        rf"& Realized & $N$ \\",
+        (
+            r"Sector & Ticker & $\overline{P^L}$ & $\overline{P^*}$ & $\overline{P^U}$ "
+            r"& Realized & $N$ \\"
+        ),
         rf" & & & & & ({horizon}-mo. {drop}\%) & \\",
         r"\midrule",
     ]
     for _, r in table.iterrows():
-        name = "S\\&P 500 index" if r["ticker"] == "SPX" else \
-            SECTOR_LABELS.get(r["ticker"], r["ticker"]).replace("&", r"\&")
+        name = (
+            "S\\&P 500 index"
+            if r["ticker"] == "SPX"
+            else SECTOR_LABELS.get(r["ticker"], r["ticker"]).replace("&", r"\&")
+        )
         realized = "" if pd.isna(r["realized_freq"]) else f"{r['realized_freq']:.3f}"
         if r["ticker"] == "SPX":
             lines.append(r"\midrule")
@@ -147,8 +190,15 @@ def _style(ax):
         spine.set_linewidth(0.8)
 
 
-def build_figure_etf(results, secid_map, threshold_q=THRESHOLD_Q, horizon=FIG_HORIZON,
-                     start=REPL_START, end=REPL_END, title=FIG_TITLE):
+def build_figure_etf(
+    results,
+    secid_map,
+    threshold_q=THRESHOLD_Q,
+    horizon=FIG_HORIZON,
+    start=REPL_START,
+    end=REPL_END,
+    title=FIG_TITLE,
+):
     """3x4 small-multiple figure: each sector ETF's lower bound + the SPX benchmark."""
     spx = _series(results, schema.SPX_SECID, threshold_q, horizon, start, end)
     tickers = [t for t in GRID_ORDER if t in set(secid_map["ticker"])]
@@ -165,20 +215,22 @@ def build_figure_etf(results, secid_map, threshold_q=THRESHOLD_Q, horizon=FIG_HO
     ytop = ymax * 1.08
 
     fig, axes = plt.subplots(3, 4, figsize=(15, 8.5), sharex=True, sharey=True)
-    fig.subplots_adjust(left=0.05, right=0.99, top=0.90, bottom=0.06,
-                        hspace=0.30, wspace=0.12)
+    fig.subplots_adjust(
+        left=0.05, right=0.99, top=0.90, bottom=0.06, hspace=0.30, wspace=0.12
+    )
     for ax, t in zip(axes.flat, tickers):
         s = per[t]
         if len(spx):
-            ax.plot(spx["date"], spx["bound_lower"], color=C_MARKET, lw=1.0,
-                    label="S&P 500")
+            ax.plot(
+                spx["date"], spx["bound_lower"], color=C_MARKET, lw=1.0, label="S&P 500"
+            )
         ax.plot(s["date"], s["bound_lower"], color=C_ETF, lw=1.1, label="Sector ETF")
         ax.set_ylim(-0.01 * ytop, ytop)
         ax.set_xlim(start, end)
         ax.set_title(f"{t} — {SECTOR_LABELS.get(t, t)}", fontsize=9.5, pad=4)
         _style(ax)
     # If fewer than 12 tickers, hide any leftover axes.
-    for ax in list(axes.flat)[len(tickers):]:
+    for ax in list(axes.flat)[len(tickers) :]:
         ax.set_visible(False)
 
     axes.flat[0].legend(frameon=False, fontsize=8, loc="upper right")
@@ -196,13 +248,16 @@ if __name__ == "__main__":
     tbl.to_csv(OUTPUT_DIR / "etf_bounds.csv", index=False)
     (OUTPUT_DIR / "etf_bounds.tex").write_text(to_latex(tbl))
     build_figure_etf(results, secid_map).savefig(
-        OUTPUT_DIR / "fig_etf_sector_bounds.png", dpi=150, bbox_inches="tight")
+        OUTPUT_DIR / "fig_etf_sector_bounds.png", dpi=150, bbox_inches="tight"
+    )
 
     # Extension through the most recent data.
     tbl_ext = etf_summary_table(results, secid_map, end=EXT_END)
     tbl_ext.to_csv(OUTPUT_DIR / "etf_bounds_ext.csv", index=False)
     (OUTPUT_DIR / "etf_bounds_ext.tex").write_text(to_latex(tbl_ext))
-    build_figure_etf(results, secid_map, end=EXT_END,
-                     title=FIG_TITLE + " (extended sample)").savefig(
-        OUTPUT_DIR / "fig_etf_sector_bounds_ext.png", dpi=150, bbox_inches="tight")
+    build_figure_etf(
+        results, secid_map, end=EXT_END, title=FIG_TITLE + " (extended sample)"
+    ).savefig(
+        OUTPUT_DIR / "fig_etf_sector_bounds_ext.png", dpi=150, bbox_inches="tight"
+    )
     print("wrote etf_bounds.{tex,csv} and fig_etf_sector_bounds.png (+ _ext)")

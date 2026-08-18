@@ -82,12 +82,24 @@ def build_table1(results, member_panel, start=REPL_START, end=REPL_END):
                 across_firms = sub.groupby("date")[col].mean()  # T monthly means
                 across_time = sub.groupby("secid")[col].mean()  # N firm means
                 rows.append(
-                    dict(q=q, measure=label, horizon=tau, block="firms",
-                         mean=across_firms.mean(), sd=across_firms.std())
+                    {
+                        "q": q,
+                        "measure": label,
+                        "horizon": tau,
+                        "block": "firms",
+                        "mean": across_firms.mean(),
+                        "sd": across_firms.std(),
+                    }
                 )
                 rows.append(
-                    dict(q=q, measure=label, horizon=tau, block="time",
-                         mean=across_time.mean(), sd=across_time.std())
+                    {
+                        "q": q,
+                        "measure": label,
+                        "horizon": tau,
+                        "block": "time",
+                        "mean": across_time.mean(),
+                        "sd": across_time.std(),
+                    }
                 )
     out = pd.DataFrame(rows)
     # Sample sizes for the two block headers: T months (across firms), N firms
@@ -124,10 +136,14 @@ def to_latex(stats):
     lines = [
         r"\begin{tabular}{ll" + "r" * (2 * len(horizons)) + "}",
         r"\toprule",
-        r" & & \multicolumn{4}{c}{averaged across firms} "
-        r"& \multicolumn{4}{c}{averaged across time} \\",
-        rf" & & \multicolumn{{4}}{{c}}{{(number of obs. {t_lab})}} "
-        rf"& \multicolumn{{4}}{{c}}{{(number of obs. {n_lab})}} \\",
+        (
+            r" & & \multicolumn{4}{c}{averaged across firms} "
+            r"& \multicolumn{4}{c}{averaged across time} \\"
+        ),
+        (
+            rf" & & \multicolumn{{4}}{{c}}{{(number of obs. {t_lab})}} "
+            rf"& \multicolumn{{4}}{{c}}{{(number of obs. {n_lab})}} \\"
+        ),
         rf" & horizon & {head} & {head} \\",
         r"\midrule",
     ]
@@ -159,11 +175,19 @@ def to_markdown(stats):
         for label, _ in MEASURES:
             for block in ("firms", "time"):
                 vals = [
-                    stats[(stats["q"] == q) & (stats["measure"] == label)
-                          & (stats["block"] == block) & (stats["horizon"] == h)]["mean"].iloc[0]
+                    stats[
+                        (stats["q"] == q)
+                        & (stats["measure"] == label)
+                        & (stats["block"] == block)
+                        & (stats["horizon"] == h)
+                    ]["mean"].iloc[0]
                     for h in horizons
                 ]
-                out.append(f"| {label} | {block} | " + " | ".join(f"{v:.3f}" for v in vals) + " |")
+                out.append(
+                    f"| {label} | {block} | "
+                    + " | ".join(f"{v:.3f}" for v in vals)
+                    + " |"
+                )
     return "\n".join(out)
 
 

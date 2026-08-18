@@ -18,8 +18,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from settings import config
 import schema
+from settings import config
 
 DATA_DIR = Path(config("DATA_DIR"))
 

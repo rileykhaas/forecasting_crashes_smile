@@ -112,7 +112,9 @@ df = data.load(pipeline="crsp_treasury", dataframe="my_data", format="polars_eag
 df = data.load(pipeline="crsp_treasury", dataframe="my_data", format="pandas")
 
 # Load with explicit catalog path
-lf = data.load(pipeline="crsp_treasury", dataframe="my_data", catalog_path="/path/to/catalog")
+lf = data.load(
+    pipeline="crsp_treasury", dataframe="my_data", catalog_path="/path/to/catalog"
+)
 
 # Get data file path
 path = data.get_data_path(pipeline="crsp_treasury", dataframe="my_data")
@@ -169,8 +171,9 @@ chartbook.plotting.pie(df, names="category", values="amount")
 chartbook.plotting.area(df, x="date", y="value")
 
 # Dual-axis chart
-chartbook.plotting.dual(df, x="date", left_y="gdp", right_y="rate",
-                         left_type="bar", right_type="line")
+chartbook.plotting.dual(
+    df, x="date", left_y="gdp", right_y="rate", left_type="bar", right_type="line"
+)
 
 # Configuration
 chartbook.plotting.configure(nber_recessions=True, default_output_dir="./_output")

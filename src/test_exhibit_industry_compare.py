@@ -47,17 +47,17 @@ def _results():
                 (schema.SPX_SECID, 0.05, 0),
             ]:
                 rows.append(
-                    dict(
-                        date=pd.Timestamp(date),
-                        secid=secid,
-                        threshold_q=0.80,
-                        horizon_months=horizon,
-                        bound_lower=lo,
-                        prob_riskneutral=lo + 0.1,
-                        bound_upper=lo + 0.2,
-                        realized_gross_return=0.9,
-                        realized_flag=flag,
-                    )
+                    {
+                        "date": pd.Timestamp(date),
+                        "secid": secid,
+                        "threshold_q": 0.80,
+                        "horizon_months": horizon,
+                        "bound_lower": lo,
+                        "prob_riskneutral": lo + 0.1,
+                        "bound_upper": lo + 0.2,
+                        "realized_gross_return": 0.9,
+                        "realized_flag": flag,
+                    }
                 )
     df = pd.DataFrame(rows)
     df["realized_flag"] = df["realized_flag"].astype("Int64")

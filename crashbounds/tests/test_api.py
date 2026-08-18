@@ -13,9 +13,9 @@ matplotlib.use("Agg")  # no display/Qt event loop needed for automated tests
 import numpy as np
 import pandas as pd
 import pytest
+from crashbounds.api import MarketData
 
 import crashbounds
-from crashbounds.api import MarketData
 
 RATE = 0.03
 MATURITY_DAYS = 30
@@ -93,7 +93,9 @@ def test_bounds_widen_with_gamma(name_data, market_data, gamma):
     """Result 4: the lower bound falls and the upper bound rises as gamma
     increases past the paper's calibrated value (2).
     """
-    base_lower, _, base_upper = crashbounds.bounds(name_data, market_data, 0.80, gamma=2)
+    base_lower, _, base_upper = crashbounds.bounds(
+        name_data, market_data, 0.80, gamma=2
+    )
     lower, _, upper = crashbounds.bounds(name_data, market_data, 0.80, gamma=gamma)
     if gamma >= 2:
         assert lower <= base_lower

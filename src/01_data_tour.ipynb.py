@@ -68,10 +68,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 import schema
-from settings import config
+from bounds import crash_bounds
 from clean_surface import load_clean_surface
 from rnd import risk_neutral_cdf
-from bounds import crash_bounds
+from settings import config
 
 # %matplotlib inline
 DATA_DIR = Path(config("DATA_DIR"))
@@ -79,7 +79,7 @@ OUTPUT_DIR = Path(config("OUTPUT_DIR"))
 plt.rcParams["figure.figsize"] = (8, 4.5)
 
 AAPL_SECID = 101594  # Apple, from optionm_security_names, the firm we follow below
-ONE_YEAR = 365       # the 1-year maturity: where Martin & Shi find the bound tightest
+ONE_YEAR = 365  # the 1-year maturity: where Martin & Shi find the bound tightest
 REPL_END = pd.Timestamp("2022-12-31")  # the paper's window; we stay inside it here
 
 # %% [markdown]
@@ -185,7 +185,9 @@ pd.DataFrame(
     {
         "threshold_q": schema.THRESHOLDS_Q,
         "crash_size": [f"{int((1 - q) * 100)}%" for q in schema.THRESHOLDS_Q],
-        "risk_neutral_crash_prob": [round(float(cdf(q)), 4) for q in schema.THRESHOLDS_Q],
+        "risk_neutral_crash_prob": [
+            round(float(cdf(q)), 4) for q in schema.THRESHOLDS_Q
+        ],
     }
 )
 
@@ -256,7 +258,12 @@ panel = results[
 
 check = pd.DataFrame(
     {
-        "measure": ["realized crash freq.", "lower bound", "risk-neutral", "upper bound"],
+        "measure": [
+            "realized crash freq.",
+            "lower bound",
+            "risk-neutral",
+            "upper bound",
+        ],
         "ours": [
             panel["realized_flag"].mean(),
             panel["bound_lower"].mean(),
@@ -313,8 +320,8 @@ plt.show()
 # the event as *contained* or *systemic*.
 
 # %%
-from pull_svb_daily import load_svb_surface, load_svb_spot, load_svb_zero
 from exhibit_svb import build_figure_svb, compute_svb_bounds, svb_realized_table
+from pull_svb_daily import load_svb_spot, load_svb_surface, load_svb_zero
 
 svb_spot = load_svb_spot()
 svb_bounds = compute_svb_bounds(load_svb_surface(), svb_spot, load_svb_zero())

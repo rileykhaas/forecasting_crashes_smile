@@ -15,7 +15,12 @@ from settings import config
 OUTPUT_DIR = Path(config("OUTPUT_DIR"))
 
 TABLES = [
-    "table1", "table2", "eda_coverage", "etf_bounds", "industry_tightness", "svb_realized",
+    "table1",
+    "table2",
+    "eda_coverage",
+    "etf_bounds",
+    "industry_tightness",
+    "svb_realized",
 ]
 
 
