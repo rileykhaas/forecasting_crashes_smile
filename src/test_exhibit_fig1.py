@@ -1,20 +1,30 @@
 """Tests for exhibit_fig1.py (Figure 1 selection logic)."""
 
-import numpy as np
 import pandas as pd
 
 from exhibit_fig1 import series_for
 
 
 def _results():
-    dates = pd.to_datetime(["2005-06-30", "2005-05-31", "2030-01-31"])  # incl. out-of-window
+    dates = pd.to_datetime(
+        ["2005-06-30", "2005-05-31", "2030-01-31"]
+    )  # incl. out-of-window
     rows = []
     for secid in (101397, 999):  # AIG + a decoy name
         for q in (0.70, 0.80):
             for h in (1, 12):
                 for d in dates:
-                    rows.append(dict(date=d, secid=secid, threshold_q=q, horizon_months=h,
-                                     bound_lower=0.1, prob_riskneutral=0.15, bound_upper=0.2))
+                    rows.append(
+                        {
+                            "date": d,
+                            "secid": secid,
+                            "threshold_q": q,
+                            "horizon_months": h,
+                            "bound_lower": 0.1,
+                            "prob_riskneutral": 0.15,
+                            "bound_upper": 0.2,
+                        }
+                    )
     return pd.DataFrame(rows)
 
 

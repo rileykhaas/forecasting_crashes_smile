@@ -23,7 +23,6 @@ surface at the maturity matching a horizon and *emits* results indexed by
 horizon. Do not force ``horizon_months`` onto the surface table.
 """
 
-import pandas as pd
 from pandas.api import types as ptypes
 
 ########################################################

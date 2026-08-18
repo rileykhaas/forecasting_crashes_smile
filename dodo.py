@@ -278,8 +278,10 @@ def task_table1():
     return {
         "actions": ["python ./src/exhibit_table1.py"],
         "targets": [
-            OUTPUT_DIR / "table1.tex", OUTPUT_DIR / "table1.csv",
-            OUTPUT_DIR / "table1_ext.tex", OUTPUT_DIR / "table1_ext.csv",
+            OUTPUT_DIR / "table1.tex",
+            OUTPUT_DIR / "table1.csv",
+            OUTPUT_DIR / "table1_ext.tex",
+            OUTPUT_DIR / "table1_ext.csv",
         ],
         "file_dep": [
             "./src/exhibit_table1.py",
@@ -351,8 +353,10 @@ def task_table2():
     return {
         "actions": ["python ./src/exhibit_table2.py"],
         "targets": [
-            OUTPUT_DIR / "table2.tex", OUTPUT_DIR / "table2.csv",
-            OUTPUT_DIR / "table2_ext.tex", OUTPUT_DIR / "table2_ext.csv",
+            OUTPUT_DIR / "table2.tex",
+            OUTPUT_DIR / "table2.csv",
+            OUTPUT_DIR / "table2_ext.tex",
+            OUTPUT_DIR / "table2_ext.csv",
         ],
         "file_dep": [
             "./src/exhibit_table2.py",
@@ -370,9 +374,12 @@ def task_eda():
     return {
         "actions": ["python ./src/exhibit_eda.py"],
         "targets": [
-            OUTPUT_DIR / "eda_coverage.tex", OUTPUT_DIR / "eda_coverage.csv",
-            OUTPUT_DIR / "eda_coverage_ext.tex", OUTPUT_DIR / "eda_coverage_ext.csv",
-            OUTPUT_DIR / "eda_panel.png", OUTPUT_DIR / "eda_panel_ext.png",
+            OUTPUT_DIR / "eda_coverage.tex",
+            OUTPUT_DIR / "eda_coverage.csv",
+            OUTPUT_DIR / "eda_coverage_ext.tex",
+            OUTPUT_DIR / "eda_coverage_ext.csv",
+            OUTPUT_DIR / "eda_panel.png",
+            OUTPUT_DIR / "eda_panel_ext.png",
         ],
         "file_dep": [
             "./src/exhibit_eda.py",
@@ -392,8 +399,10 @@ def task_etf_bounds():
     return {
         "actions": ["python ./src/exhibit_etf_bounds.py"],
         "targets": [
-            OUTPUT_DIR / "etf_bounds.tex", OUTPUT_DIR / "etf_bounds.csv",
-            OUTPUT_DIR / "etf_bounds_ext.tex", OUTPUT_DIR / "etf_bounds_ext.csv",
+            OUTPUT_DIR / "etf_bounds.tex",
+            OUTPUT_DIR / "etf_bounds.csv",
+            OUTPUT_DIR / "etf_bounds_ext.tex",
+            OUTPUT_DIR / "etf_bounds_ext.csv",
             OUTPUT_DIR / "fig_etf_sector_bounds.png",
             OUTPUT_DIR / "fig_etf_sector_bounds_ext.png",
         ],
@@ -412,8 +421,10 @@ def task_industry_compare():
     return {
         "actions": ["python ./src/exhibit_industry_compare.py"],
         "targets": [
-            OUTPUT_DIR / "industry_tightness.tex", OUTPUT_DIR / "industry_tightness.csv",
-            OUTPUT_DIR / "industry_tightness_ext.tex", OUTPUT_DIR / "industry_tightness_ext.csv",
+            OUTPUT_DIR / "industry_tightness.tex",
+            OUTPUT_DIR / "industry_tightness.csv",
+            OUTPUT_DIR / "industry_tightness_ext.tex",
+            OUTPUT_DIR / "industry_tightness_ext.csv",
             OUTPUT_DIR / "fig_industry_compare.png",
             OUTPUT_DIR / "fig_industry_compare_ext.png",
         ],
@@ -499,7 +510,7 @@ def task_run_notebooks():
     """Preps the notebooks for presentation format.
     Execute notebooks if the script version of it has been changed.
     """
-    for notebook in notebook_tasks.keys():
+    for notebook in notebook_tasks:
         pyfile_path = Path(notebook_tasks[notebook]["path"])
         notebook_path = pyfile_path.with_suffix("")  # strips .py, leaves .ipynb
         notebook_name = notebook_path.stem  # e.g. "01_example_notebook_interactive"
@@ -575,16 +586,31 @@ sphinx_targets = [
 
 
 CHART_IDS = [
-    "fig1_single_name_bounds", "fig2_median_bounds_market", "fig6_oos_r2",
-    "eda_panel", "fig_etf_sector_bounds", "fig_industry_compare", "fig_svb_case_study",
+    "fig1_single_name_bounds",
+    "fig2_median_bounds_market",
+    "fig6_oos_r2",
+    "eda_panel",
+    "fig_etf_sector_bounds",
+    "fig_industry_compare",
+    "fig_svb_case_study",
 ]
 CHART_SRC_PNG = [
-    "fig1_single_name_bounds_ext.png", "fig2_median_bounds_market_ext.png",
-    "fig6_oos_r2_ext.png", "eda_panel_ext.png", "fig_etf_sector_bounds_ext.png",
-    "fig_industry_compare_ext.png", "fig_svb_case_study.png",
+    "fig1_single_name_bounds_ext.png",
+    "fig2_median_bounds_market_ext.png",
+    "fig6_oos_r2_ext.png",
+    "eda_panel_ext.png",
+    "fig_etf_sector_bounds_ext.png",
+    "fig_industry_compare_ext.png",
+    "fig_svb_case_study.png",
 ]
-TABLE_IDS = ["table1", "table2", "eda_coverage", "etf_bounds",
-             "industry_tightness", "svb_realized"]
+TABLE_IDS = [
+    "table1",
+    "table2",
+    "eda_coverage",
+    "etf_bounds",
+    "industry_tightness",
+    "svb_realized",
+]
 
 
 def task_chart_html():
@@ -593,8 +619,10 @@ def task_chart_html():
     return {
         "actions": ["python ./src/build_chart_html.py"],
         "targets": [OUTPUT_DIR / f"{c}.html" for c in CHART_IDS],
-        "file_dep": ["./src/build_chart_html.py",
-                     *[OUTPUT_DIR / p for p in CHART_SRC_PNG]],
+        "file_dep": [
+            "./src/build_chart_html.py",
+            *[OUTPUT_DIR / p for p in CHART_SRC_PNG],
+        ],
         "clean": True,
     }
 
@@ -604,8 +632,10 @@ def task_table_parquet():
     return {
         "actions": ["python ./src/build_table_parquet.py"],
         "targets": [OUTPUT_DIR / f"{t}.parquet" for t in TABLE_IDS],
-        "file_dep": ["./src/build_table_parquet.py",
-                     *[OUTPUT_DIR / f"{t}.csv" for t in TABLE_IDS]],
+        "file_dep": [
+            "./src/build_table_parquet.py",
+            *[OUTPUT_DIR / f"{t}.csv" for t in TABLE_IDS],
+        ],
         "clean": True,
     }
 
@@ -613,14 +643,18 @@ def task_table_parquet():
 def task_build_chartbook_site():
     """Compile Sphinx Docs"""
     notebook_scripts = [
-        Path(notebook_tasks[notebook]["path"]) for notebook in notebook_tasks.keys()
+        Path(notebook_tasks[notebook]["path"]) for notebook in notebook_tasks
     ]
     file_dep = [
         "./README.md",
         "./chartbook.toml",
         *notebook_scripts,
-        *[OUTPUT_DIR / f"{c}.html" for c in CHART_IDS],       # chart HTML (renders the figures)
-        *[OUTPUT_DIR / f"{t}.parquet" for t in TABLE_IDS],    # table parquet (data glimpse)
+        *[
+            OUTPUT_DIR / f"{c}.html" for c in CHART_IDS
+        ],  # chart HTML (renders the figures)
+        *[
+            OUTPUT_DIR / f"{t}.parquet" for t in TABLE_IDS
+        ],  # table parquet (data glimpse)
     ]
 
     return {
@@ -650,6 +684,7 @@ def task_run_pytest():
 
         result = subprocess.run(
             ["pytest", f"--junitxml={test_output}"],
+            check=False,
         )
         if result.returncode != 0:
             # Remove the XML so doit won't consider the target up-to-date

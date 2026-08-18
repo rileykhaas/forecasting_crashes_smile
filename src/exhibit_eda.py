@@ -18,18 +18,19 @@ Two exhibits, each with a ``_ext`` variant through the latest data:
     by maturity, and (d) the realized-return distribution at 1- vs 12-month horizons.
 """
 
+from itertools import pairwise
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")  # headless: save files, never open a window
-import matplotlib.dates as mdates  # noqa: E402
-import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.ticker import MaxNLocator  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib.ticker import MaxNLocator
 
-from settings import config  # noqa: E402
+from settings import config
 
 OUTPUT_DIR = Path(config("OUTPUT_DIR"))
 
@@ -38,19 +39,18 @@ REPL_END = pd.Timestamp("2022-12-31")
 EXT_END = pd.Timestamp("2025-12-31")  # extension: through the most recent data
 TITLE = "The Underlying Option-Return Panel at a Glance"
 
-CRASH_Q = 0.80        # a 20% crash (gross return <= 0.8)
-CRASH_HORIZON = 12    # the 12-month horizon used for the table's crash column
+CRASH_Q = 0.80  # a 20% crash (gross return <= 0.8)
+CRASH_HORIZON = 12  # the 12-month horizon used for the table's crash column
 MATURITIES = [30, 91, 182, 365]  # days_to_maturity present in the surface
 
 # Moneyness (K/S) bin edges for the smile and the availability heatmap. The bound
 # reads the out-of-the-money-put (low-moneyness) tail, so the grid is finer there.
-MONEYNESS_EDGES = [0.50, 0.70, 0.80, 0.90, 0.95, 1.00,
-                   1.05, 1.10, 1.20, 1.35, 1.60]
+MONEYNESS_EDGES = [0.50, 0.70, 0.80, 0.90, 0.95, 1.00, 1.05, 1.10, 1.20, 1.35, 1.60]
 
-C_COVER = "#4f9ed6"   # blue -- coverage line
+C_COVER = "#4f9ed6"  # blue -- coverage line
 MAT_COLORS = {30: "#c7e0f4", 91: "#7fb8e6", 182: "#3b83c0", 365: "#1f4e79"}
-C_H1 = "#9a9a9a"      # grey -- 1-month return distribution
-C_H12 = "#e46fb0"     # pink -- 12-month return distribution
+C_H1 = "#9a9a9a"  # grey -- 1-month return distribution
+C_H12 = "#e46fb0"  # pink -- 12-month return distribution
 
 
 # --------------------------------------------------------------------------- #
@@ -69,7 +69,9 @@ def constituent_frame(panel, member_panel, start=REPL_START, end=REPL_END):
 # --------------------------------------------------------------------------- #
 # Table: per-year coverage
 # --------------------------------------------------------------------------- #
-def coverage_by_year(surface_c, returns_c, crash_q=CRASH_Q, crash_horizon=CRASH_HORIZON):
+def coverage_by_year(
+    surface_c, returns_c, crash_q=CRASH_Q, crash_horizon=CRASH_HORIZON
+):
     """Per-year coverage statistics of the (already constituent-restricted) panel.
 
     Columns [year, n_names, n_firm_months, n_quotes, quotes_per_fm, median_iv,
@@ -80,16 +82,22 @@ def coverage_by_year(surface_c, returns_c, crash_q=CRASH_Q, crash_horizon=CRASH_
     s["year"] = s["date"].dt.year
     fm = s.drop_duplicates(["year", "date", "secid"])
     quotes_per_fm = s.groupby(["date", "secid"]).size()
-    qpf_year = quotes_per_fm.reset_index(name="q").assign(
-        year=lambda d: d["date"].dt.year).groupby("year")["q"].median()
+    qpf_year = (
+        quotes_per_fm.reset_index(name="q")
+        .assign(year=lambda d: d["date"].dt.year)
+        .groupby("year")["q"]
+        .median()
+    )
 
-    cov = pd.DataFrame({
-        "n_names": s.groupby("year")["secid"].nunique(),
-        "n_firm_months": fm.groupby("year").size(),
-        "n_quotes": s.groupby("year").size(),
-        "quotes_per_fm": qpf_year,
-        "median_iv": s.groupby("year")["implied_vol"].median().astype("float64"),
-    })
+    cov = pd.DataFrame(
+        {
+            "n_names": s.groupby("year")["secid"].nunique(),
+            "n_firm_months": fm.groupby("year").size(),
+            "n_quotes": s.groupby("year").size(),
+            "quotes_per_fm": qpf_year,
+            "median_iv": s.groupby("year")["implied_vol"].median().astype("float64"),
+        }
+    )
 
     r = returns_c[returns_c["horizon_months"] == crash_horizon].copy()
     r["year"] = r["date"].dt.year
@@ -101,12 +109,14 @@ def coverage_by_year(surface_c, returns_c, crash_q=CRASH_Q, crash_horizon=CRASH_
 
 def to_latex(cov, crash_q=CRASH_Q, crash_horizon=CRASH_HORIZON):
     """Render the per-year coverage table as a LaTeX tabular."""
-    drop = int(round((1 - crash_q) * 100))
+    drop = round((1 - crash_q) * 100)
     lines = [
         r"\begin{tabular}{lrrrrrr}",
         r"\toprule",
-        r"Year & Names & Firm-mo. & Quotes & Quotes & Median & "
-        rf"{crash_horizon}-mo. {drop}\% \\",
+        (
+            r"Year & Names & Firm-mo. & Quotes & Quotes & Median & "
+            rf"{crash_horizon}-mo. {drop}\% \\"
+        ),
         r" & ($N$) & & (000s) & /firm-mo. & IV & crash freq. \\",
         r"\midrule",
     ]
@@ -137,8 +147,11 @@ def availability_grid(surface_c, edges=MONEYNESS_EDGES, maturities=MATURITIES):
     s["mbin"] = pd.cut(s["moneyness"].astype("float64"), bins=edges, right=False)
     s = s.dropna(subset=["mbin"])
     total_fm = s.drop_duplicates(["date", "secid"]).shape[0]
-    covered = (s.drop_duplicates(["date", "secid", "days_to_maturity", "mbin"])
-               .groupby(["days_to_maturity", "mbin"], observed=True).size())
+    covered = (
+        s.drop_duplicates(["date", "secid", "days_to_maturity", "mbin"])
+        .groupby(["days_to_maturity", "mbin"], observed=True)
+        .size()
+    )
     grid = (covered / total_fm).unstack("mbin")
     return grid.reindex(index=maturities)
 
@@ -150,29 +163,34 @@ def iv_smile(surface_c, edges=MONEYNESS_EDGES, maturities=MATURITIES):
     s["moneyness"] = s["moneyness"].astype("float64")
     s["implied_vol"] = s["implied_vol"].astype("float64")
     s["mbin"] = pd.cut(s["moneyness"], bins=edges, right=False)
-    med = (s.dropna(subset=["mbin"])
-           .groupby(["days_to_maturity", "mbin"], observed=True)["implied_vol"]
-           .median().unstack("mbin"))
+    med = (
+        s.dropna(subset=["mbin"])
+        .groupby(["days_to_maturity", "mbin"], observed=True)["implied_vol"]
+        .median()
+        .unstack("mbin")
+    )
     return med.reindex(index=maturities)
 
 
 def _bin_centers(edges):
-    return [(a + b) / 2 for a, b in zip(edges[:-1], edges[1:])]
+    return [(a + b) / 2 for a, b in pairwise(edges)]
 
 
 # --------------------------------------------------------------------------- #
 # Figure
 # --------------------------------------------------------------------------- #
-def build_figure_eda(surface, returns, member_panel, start=REPL_START,
-                     end=REPL_END, title=TITLE):
+def build_figure_eda(
+    surface, returns, member_panel, start=REPL_START, end=REPL_END, title=TITLE
+):
     """Return the 2x2 EDA panel figure for the constituent panel over [start, end]."""
     surface_c = constituent_frame(surface, member_panel, start, end)
     returns_c = constituent_frame(returns, member_panel, start, end)
     centers = _bin_centers(MONEYNESS_EDGES)
 
     fig, axes = plt.subplots(2, 2, figsize=(13, 9))
-    fig.subplots_adjust(left=0.07, right=0.97, top=0.90, bottom=0.08,
-                        hspace=0.32, wspace=0.24)
+    fig.subplots_adjust(
+        left=0.07, right=0.97, top=0.90, bottom=0.08, hspace=0.32, wspace=0.24
+    )
 
     # (a) Cross-section size over time -----------------------------------------
     ax = axes[0, 0]
@@ -189,8 +207,14 @@ def build_figure_eda(surface, returns, member_panel, start=REPL_START,
     # (b) Moneyness x maturity availability heatmap ----------------------------
     ax = axes[0, 1]
     grid = availability_grid(surface_c)
-    im = ax.imshow(grid.to_numpy(dtype=float), aspect="auto", cmap="Blues",
-                   origin="upper", vmin=0.0, vmax=1.0)
+    im = ax.imshow(
+        grid.to_numpy(dtype=float),
+        aspect="auto",
+        cmap="Blues",
+        origin="upper",
+        vmin=0.0,
+        vmax=1.0,
+    )
     ax.set_xticks(range(len(centers)))
     ax.set_xticklabels([f"{c:.2f}" for c in centers], rotation=45, fontsize=7.5)
     ax.set_yticks(range(len(MATURITIES)))
@@ -207,8 +231,15 @@ def build_figure_eda(surface, returns, member_panel, start=REPL_START,
     smile = iv_smile(surface_c)
     for m in MATURITIES:
         if m in smile.index:
-            ax.plot(centers, smile.loc[m].to_numpy(dtype=float), marker="o", ms=3,
-                    lw=1.2, color=MAT_COLORS[m], label=f"{m}d")
+            ax.plot(
+                centers,
+                smile.loc[m].to_numpy(dtype=float),
+                marker="o",
+                ms=3,
+                lw=1.2,
+                color=MAT_COLORS[m],
+                label=f"{m}d",
+            )
     ax.axvline(1.0, color="#9a9a9a", lw=0.8, ls=(0, (4, 3)))
     ax.set_title("(c) The implied-volatility smile, by maturity", fontsize=10.5)
     ax.set_xlabel("Moneyness $K/S$")
@@ -220,17 +251,41 @@ def build_figure_eda(surface, returns, member_panel, start=REPL_START,
     ax = axes[1, 1]
     bins = np.linspace(0.4, 1.8, 57)
     for tau, color, lab in [(1, C_H1, "1 month"), (12, C_H12, "12 months")]:
-        vals = returns_c.loc[returns_c["horizon_months"] == tau,
-                             "realized_gross_return"].to_numpy(dtype=float)
-        vals = vals[(vals >= bins[0]) & (vals <= bins[-1])]  # trim tails (no edge pile-up)
-        ax.hist(vals, bins=bins, density=True, histtype="step", lw=1.5,
-                color=color, label=lab)
+        vals = returns_c.loc[
+            returns_c["horizon_months"] == tau, "realized_gross_return"
+        ].to_numpy(dtype=float)
+        vals = vals[
+            (vals >= bins[0]) & (vals <= bins[-1])
+        ]  # trim tails (no edge pile-up)
+        ax.hist(
+            vals,
+            bins=bins,
+            density=True,
+            histtype="step",
+            lw=1.5,
+            color=color,
+            label=lab,
+        )
     ax.axvline(CRASH_Q, color="#333333", lw=0.9, ls="--")
-    ax.text(CRASH_Q, ax.get_ylim()[1] * 0.92, " 20% crash", fontsize=7.5,
-            color="#333333", ha="left", va="top")
+    ax.text(
+        CRASH_Q,
+        ax.get_ylim()[1] * 0.92,
+        " 20% crash",
+        fontsize=7.5,
+        color="#333333",
+        ha="left",
+        va="top",
+    )
     ax.axvline(0.70, color="#333333", lw=0.7, ls=":")
-    ax.text(0.70, ax.get_ylim()[1] * 0.78, " 30%", fontsize=7.5,
-            color="#333333", ha="left", va="top")
+    ax.text(
+        0.70,
+        ax.get_ylim()[1] * 0.78,
+        " 30%",
+        fontsize=7.5,
+        color="#333333",
+        ha="left",
+        va="top",
+    )
     ax.set_title("(d) Realized gross-return distribution, by horizon", fontsize=10.5)
     ax.set_xlabel("Gross return $R_{t\\to t+\\tau}$")
     ax.set_ylabel("Density")
@@ -267,19 +322,22 @@ if __name__ == "__main__":
     # Replication window (1996-2022): table + figure.
     cov = coverage_by_year(
         constituent_frame(surface, universe, REPL_START, REPL_END),
-        constituent_frame(returns, universe, REPL_START, REPL_END))
+        constituent_frame(returns, universe, REPL_START, REPL_END),
+    )
     cov.to_csv(OUTPUT_DIR / "eda_coverage.csv", index=False)
     (OUTPUT_DIR / "eda_coverage.tex").write_text(to_latex(cov))
     build_figure_eda(surface, returns, universe).savefig(
-        OUTPUT_DIR / "eda_panel.png", dpi=150, bbox_inches="tight")
+        OUTPUT_DIR / "eda_panel.png", dpi=150, bbox_inches="tight"
+    )
 
     # Extension through the most recent data.
     cov_ext = coverage_by_year(
         constituent_frame(surface, universe, REPL_START, EXT_END),
-        constituent_frame(returns, universe, REPL_START, EXT_END))
+        constituent_frame(returns, universe, REPL_START, EXT_END),
+    )
     cov_ext.to_csv(OUTPUT_DIR / "eda_coverage_ext.csv", index=False)
     (OUTPUT_DIR / "eda_coverage_ext.tex").write_text(to_latex(cov_ext))
-    build_figure_eda(surface, returns, universe, end=EXT_END,
-                     title=TITLE + " (extended sample)").savefig(
-        OUTPUT_DIR / "eda_panel_ext.png", dpi=150, bbox_inches="tight")
+    build_figure_eda(
+        surface, returns, universe, end=EXT_END, title=TITLE + " (extended sample)"
+    ).savefig(OUTPUT_DIR / "eda_panel_ext.png", dpi=150, bbox_inches="tight")
     print("wrote eda_coverage.{tex,csv} and eda_panel.png (+ _ext)")

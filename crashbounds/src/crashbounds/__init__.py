@@ -24,7 +24,9 @@ End to end (one call)::
 import sys
 from pathlib import Path
 
-_crashbounds_pkg_dir = Path(__file__).resolve().parent  # .../crashbounds/src/crashbounds
+_crashbounds_pkg_dir = (
+    Path(__file__).resolve().parent
+)  # .../crashbounds/src/crashbounds
 _crashbounds_dir = _crashbounds_pkg_dir.parent.parent  # .../crashbounds
 _repo_root = _crashbounds_dir.parent  # the main repo
 _engine_src = _repo_root / "src"
@@ -39,12 +41,9 @@ if not (_engine_src / "rnd.py").exists():
 if str(_engine_src) not in sys.path:
     sys.path.insert(0, str(_engine_src))
 
-from rnd import RiskNeutralCDF, risk_neutral_cdf  # noqa: E402
-from crash_prob import risk_neutral_crash_prob  # noqa: E402
-from utility_correction import market_moment, weighted_tail_expectation  # noqa: E402
-from bounds import crash_bounds  # noqa: E402
-
-from crashbounds.api import (  # noqa: E402
+from bounds import crash_bounds
+from crash_prob import risk_neutral_crash_prob
+from crashbounds.api import (
     CrashBoundsResult,
     MarketData,
     bounds,
@@ -54,6 +53,8 @@ from crashbounds.api import (  # noqa: E402
     report,
     risk_neutral_prob,
 )
+from rnd import RiskNeutralCDF, risk_neutral_cdf
+from utility_correction import market_moment, weighted_tail_expectation
 
 __all__ = [
     # engine (A1-A4), re-exported as-is

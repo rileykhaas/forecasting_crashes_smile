@@ -35,7 +35,9 @@ class RiskNeutralCDF:
     def __init__(self, grid, values, call_grid=None, maturity_years=None):
         self.grid = np.asarray(grid, dtype=float)
         self.values = np.asarray(values, dtype=float)
-        self.call_grid = None if call_grid is None else np.asarray(call_grid, dtype=float)
+        self.call_grid = (
+            None if call_grid is None else np.asarray(call_grid, dtype=float)
+        )
         self.maturity_years = maturity_years
 
     def __call__(self, q):
@@ -133,4 +135,6 @@ def risk_neutral_cdf(surface_slice, rate, n_grid=N_GRID):
     )
     q_fit = np.clip(isotonic.fit_transform(grid, q_raw), 0.0, 1.0)
 
-    return RiskNeutralCDF(grid, q_fit, call_grid=call_grid, maturity_years=maturity_years)
+    return RiskNeutralCDF(
+        grid, q_fit, call_grid=call_grid, maturity_years=maturity_years
+    )

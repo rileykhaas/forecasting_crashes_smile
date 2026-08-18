@@ -34,7 +34,9 @@ END_DATE = config("END_DATE")
 
 
 def pull_CRSP_monthly_file(
-    start_date=START_DATE, end_date=END_DATE, wrds_username=WRDS_USERNAME,
+    start_date=START_DATE,
+    end_date=END_DATE,
+    wrds_username=WRDS_USERNAME,
     extra_permnos=None,
 ):
     """Pull monthly CRSP stock data (CIZ format) over [start_date, end_date].
@@ -159,7 +161,9 @@ def sector_etf_permnos(data_dir=DATA_DIR):
     if not (manifest_path.exists() and link_path.exists()):
         return []
     manifest = pd.read_parquet(manifest_path)
-    etf_secids = set(manifest.loc[manifest["source"] == "sector_etf", "secid"].astype(int))
+    etf_secids = set(
+        manifest.loc[manifest["source"] == "sector_etf", "secid"].astype(int)
+    )
     link = pd.read_parquet(link_path)
     permnos = link.loc[link["secid"].isin(etf_secids), "permno"].dropna().astype(int)
     return sorted(permnos.unique())
@@ -168,7 +172,8 @@ def sector_etf_permnos(data_dir=DATA_DIR):
 if __name__ == "__main__":
     # Include the extension ETF permnos (#34) alongside the EQTY universe.
     df_msf = pull_CRSP_monthly_file(
-        start_date=START_DATE, end_date=END_DATE,
+        start_date=START_DATE,
+        end_date=END_DATE,
         extra_permnos=sector_etf_permnos(),
     )
     df_msf.to_parquet(Path(DATA_DIR) / "CRSP_monthly_stock.parquet")

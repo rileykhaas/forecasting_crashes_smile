@@ -34,8 +34,8 @@ from pathlib import Path
 import pandas as pd
 import wrds
 
-from settings import config
 from schema import EXTENSION_ETF_TICKERS, MATURITIES_DAYS, SPX_SECID
+from settings import config
 from sp500_secid_universe import (
     get_universe_secids,
     load_sp500_secid_universe,
@@ -117,7 +117,7 @@ def assemble_pull_secids(constituent_secids, etf_secids, index_secid=SPX_SECID):
     Pure helper (no WRDS): the single source of the secid set the surface pull
     iterates over. Kept separate so it can be unit-tested without a connection.
     """
-    all_secids = set(int(s) for s in constituent_secids)
+    all_secids = {int(s) for s in constituent_secids}
     all_secids.add(int(index_secid))
     all_secids.update(int(s) for s in etf_secids)
     return sorted(all_secids)
@@ -245,7 +245,8 @@ def pull_vol_surface(
                 src = pd.Timestamp(fb.attrs["source_date"]).date()
                 print(
                     f"[pull_vol_surface] {month_end.date()} month-end empty; "
-                    f"used {src} ({len(fb):,} rows)", flush=True
+                    f"used {src} ({len(fb):,} rows)",
+                    flush=True,
                 )
                 frames.append(fb)
     finally:

@@ -137,7 +137,9 @@ def _pull_rate(db, date, days_to_maturity):
         WHERE date = '{date.strftime("%Y-%m-%d")}'
     """
     raw_zero_curve = db.raw_sql(query, date_cols=["date"])
-    rates_df = build_rates(raw_zero_curve, month_ends=[date], maturities=[days_to_maturity])
+    rates_df = build_rates(
+        raw_zero_curve, month_ends=[date], maturities=[days_to_maturity]
+    )
     return float(rates_df["zero_rate"].iloc[0]) / 100.0
 
 
@@ -149,7 +151,9 @@ def _pull_crsp_spot(db, permno, date):
     """
     row = db.raw_sql(query, date_cols=["mthcaldt"])
     if row.empty:
-        raise ValueError(f"No CRSP price found for permno={permno} at or before {date}.")
+        raise ValueError(
+            f"No CRSP price found for permno={permno} at or before {date}."
+        )
     return abs(float(row["mthprc"].iloc[0]))
 
 
@@ -218,7 +222,15 @@ def fetch_data(ticker, maturity_days=30, wrds_username=None):
     surface["spot_price"] = spot_price
     surface["moneyness"] = surface["impl_strike"] / spot_price
     surface = surface[
-        ["date", "secid", "days_to_maturity", "moneyness", "implied_vol", "spot_price", "cp_flag"]
+        [
+            "date",
+            "secid",
+            "days_to_maturity",
+            "moneyness",
+            "implied_vol",
+            "spot_price",
+            "cp_flag",
+        ]
     ]
 
     return MarketData(
@@ -258,21 +270,40 @@ def bounds(name_data, market_data, threshold_q, gamma=None):
     q_l = float(cdf_m.inverse(prob_riskneutral))
     q_u = float(cdf_m.inverse(1.0 - prob_riskneutral))
     denom = market_moment(cdf_m, market_data.rate, gamma=gamma)
-    bound_lower = weighted_tail_expectation(cdf_m, market_data.rate, q_l, tail="lower", gamma=gamma) / denom
-    bound_upper = weighted_tail_expectation(cdf_m, market_data.rate, q_u, tail="upper", gamma=gamma) / denom
+    bound_lower = (
+        weighted_tail_expectation(
+            cdf_m, market_data.rate, q_l, tail="lower", gamma=gamma
+        )
+        / denom
+    )
+    bound_upper = (
+        weighted_tail_expectation(
+            cdf_m, market_data.rate, q_u, tail="upper", gamma=gamma
+        )
+        / denom
+    )
     return bound_lower, prob_riskneutral, bound_upper
 
 
 def crash_probability(
-    ticker, horizon_months, threshold_q, market_ticker="SPX", gamma=None, wrds_username=None
+    ticker,
+    horizon_months,
+    threshold_q,
+    market_ticker="SPX",
+    gamma=None,
+    wrds_username=None,
 ):
     """End-to-end: fetch data for ``ticker`` and ``market_ticker``, return
     the full bound triple. For more control (e.g. reusing one market fetch
     across several names), call fetch_data()/bounds() yourself instead.
     """
     maturity_days = schema.HORIZON_TO_MATURITY_DAYS[horizon_months]
-    name_data = fetch_data(ticker, maturity_days=maturity_days, wrds_username=wrds_username)
-    market_data = fetch_data(market_ticker, maturity_days=maturity_days, wrds_username=wrds_username)
+    name_data = fetch_data(
+        ticker, maturity_days=maturity_days, wrds_username=wrds_username
+    )
+    market_data = fetch_data(
+        market_ticker, maturity_days=maturity_days, wrds_username=wrds_username
+    )
     bound_lower, prob_riskneutral, bound_upper = bounds(
         name_data, market_data, threshold_q, gamma=gamma
     )

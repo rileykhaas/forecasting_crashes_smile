@@ -7,8 +7,8 @@ extension ETFs must always be included, and the set must be deduped and sorted.
 
 import pandas as pd
 
-from schema import SPX_SECID
 from pull_optionmetrics import _empty_month_ends, assemble_pull_secids
+from schema import SPX_SECID
 
 
 def test_assemble_includes_index_and_etfs():
@@ -34,7 +34,9 @@ def test_assemble_returns_plain_ints():
 
 
 def _surface_rows(date, strikes):
-    return pd.DataFrame({"date": pd.to_datetime([date] * len(strikes)), "impl_strike": strikes})
+    return pd.DataFrame(
+        {"date": pd.to_datetime([date] * len(strikes)), "impl_strike": strikes}
+    )
 
 
 def test_empty_month_ends_flags_only_all_sentinel_months():

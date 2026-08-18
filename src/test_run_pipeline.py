@@ -16,7 +16,6 @@ def _smile(secid, date, vol=0.25, days=MATURITY_DAYS):
     moneyness = np.linspace(0.5, 1.5, 25)
     forward = np.exp((RATE_PCT / 100.0) * (days / 365.0))
     cp_flag = np.where(moneyness <= forward, "P", "C")
-    n = len(moneyness)
     return pd.DataFrame(
         {
             "date": pd.Timestamp(date),
@@ -65,22 +64,34 @@ def realized_returns_fixture():
     )
 
 
-def test_schema_and_bound_ordering(clean_surface_fixture, rates_fixture, realized_returns_fixture):
-    results = run_pipeline(clean_surface_fixture, rates_fixture, realized_returns_fixture)
+def test_schema_and_bound_ordering(
+    clean_surface_fixture, rates_fixture, realized_returns_fixture
+):
+    results = run_pipeline(
+        clean_surface_fixture, rates_fixture, realized_returns_fixture
+    )
     assert schema.validate_schema(results, "results")
     assert schema.check_bound_ordering(results)
 
 
-def test_market_secid_is_included(clean_surface_fixture, rates_fixture, realized_returns_fixture):
+def test_market_secid_is_included(
+    clean_surface_fixture, rates_fixture, realized_returns_fixture
+):
     """The index is the i = m case of Result 3 (eq. 7) -- it gets its own rows,
     not just used as the market ingredient for other names (Figure 2 / gamma).
     """
-    results = run_pipeline(clean_surface_fixture, rates_fixture, realized_returns_fixture)
+    results = run_pipeline(
+        clean_surface_fixture, rates_fixture, realized_returns_fixture
+    )
     assert schema.SPX_SECID in set(results["secid"])
 
 
-def test_one_row_per_threshold(clean_surface_fixture, rates_fixture, realized_returns_fixture):
-    results = run_pipeline(clean_surface_fixture, rates_fixture, realized_returns_fixture)
+def test_one_row_per_threshold(
+    clean_surface_fixture, rates_fixture, realized_returns_fixture
+):
+    results = run_pipeline(
+        clean_surface_fixture, rates_fixture, realized_returns_fixture
+    )
     # 2 dates x 2 secids (index + name) x 1 horizon x 3 thresholds
     assert len(results) == 2 * 2 * 1 * len(schema.THRESHOLDS_Q)
     assert set(results["threshold_q"]) == set(schema.THRESHOLDS_Q)
@@ -94,7 +105,9 @@ def test_index_lower_bound_equals_market_crash_probability(
     from rnd import risk_neutral_cdf
     from utility_correction import market_moment, weighted_tail_expectation
 
-    results = run_pipeline(clean_surface_fixture, rates_fixture, realized_returns_fixture)
+    results = run_pipeline(
+        clean_surface_fixture, rates_fixture, realized_returns_fixture
+    )
     spx = results[
         (results["secid"] == schema.SPX_SECID) & (results["date"] == "2020-01-31")
     ].set_index("threshold_q")
@@ -108,8 +121,12 @@ def test_index_lower_bound_equals_market_crash_probability(
         assert spx.loc[q, "bound_lower"] == pytest.approx(expected, abs=1e-9)
 
 
-def test_realized_flag_matches_threshold(clean_surface_fixture, rates_fixture, realized_returns_fixture):
-    results = run_pipeline(clean_surface_fixture, rates_fixture, realized_returns_fixture)
+def test_realized_flag_matches_threshold(
+    clean_surface_fixture, rates_fixture, realized_returns_fixture
+):
+    results = run_pipeline(
+        clean_surface_fixture, rates_fixture, realized_returns_fixture
+    )
     jan = results[
         (results["date"] == "2020-01-31") & (results["secid"] == NAME_SECID)
     ].set_index("threshold_q")
@@ -119,8 +136,12 @@ def test_realized_flag_matches_threshold(clean_surface_fixture, rates_fixture, r
     assert jan.loc[0.90, "realized_flag"] == 1
 
 
-def test_missing_realized_data_is_na(clean_surface_fixture, rates_fixture, realized_returns_fixture):
-    results = run_pipeline(clean_surface_fixture, rates_fixture, realized_returns_fixture)
+def test_missing_realized_data_is_na(
+    clean_surface_fixture, rates_fixture, realized_returns_fixture
+):
+    results = run_pipeline(
+        clean_surface_fixture, rates_fixture, realized_returns_fixture
+    )
     feb = results[results["date"] == "2020-02-28"]
     assert feb["realized_gross_return"].isna().all()
     assert feb["realized_flag"].isna().all()

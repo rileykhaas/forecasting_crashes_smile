@@ -62,7 +62,9 @@ def _closed_form_moment(vol, gamma, maturity_years=MATURITY_YEARS, rate=RATE):
     return np.exp(gamma * mu + 0.5 * gamma**2 * sigma**2)
 
 
-def _closed_form_lower_partial_moment(vol, k, gamma, maturity_years=MATURITY_YEARS, rate=RATE):
+def _closed_form_lower_partial_moment(
+    vol, k, gamma, maturity_years=MATURITY_YEARS, rate=RATE
+):
     mu, sigma = _lognormal_params(vol, maturity_years, rate)
     d = (np.log(k) - mu) / sigma
     return _closed_form_moment(vol, gamma, maturity_years, rate) * norm.cdf(
@@ -133,7 +135,9 @@ def test_invalid_tail_raises(flat_vol_25):
 
 
 @pytest.mark.parametrize("threshold_q", schema.THRESHOLDS_Q)
-def test_crash_bounds_matches_closed_form(flat_vol_20_index, flat_vol_35_name, threshold_q):
+def test_crash_bounds_matches_closed_form(
+    flat_vol_20_index, flat_vol_35_name, threshold_q
+):
     """Two independent flat-vol (lognormal) marginals give a closed form:
 
     bound_lower = Phi(Phi^-1(p) - gamma*sigma_m), bound_upper = Phi(Phi^-1(p) + gamma*sigma_m),
@@ -172,7 +176,9 @@ def test_crash_bounds_ordering_holds(flat_vol_20_index, flat_vol_35_name, thresh
 
 
 @pytest.mark.parametrize("threshold_q", schema.THRESHOLDS_Q)
-def test_crash_bounds_ordering_holds_with_smile(smile_slice, flat_vol_35_name, threshold_q):
+def test_crash_bounds_ordering_holds_with_smile(
+    smile_slice, flat_vol_35_name, threshold_q
+):
     """Result 3 should hold regardless of smile shape, not just flat-vol names."""
     cdf_m = risk_neutral_cdf(smile_slice, RATE)
     cdf_i = risk_neutral_cdf(flat_vol_35_name, RATE)
@@ -205,10 +211,14 @@ def test_ordering_holds_for_steep_short_maturity_skew(threshold_q):
     index (i = m) case, exactly the fixture that failed on real data.
     """
     cdf = risk_neutral_cdf(
-        _surface_slice(np.array(_SKEW_MONEYNESS), np.array(_SKEW_VOL), secid=schema.SPX_SECID),
+        _surface_slice(
+            np.array(_SKEW_MONEYNESS), np.array(_SKEW_VOL), secid=schema.SPX_SECID
+        ),
         RATE,
     )
-    bound_lower, prob_riskneutral, bound_upper = crash_bounds(cdf, cdf, RATE, threshold_q)
+    bound_lower, prob_riskneutral, bound_upper = crash_bounds(
+        cdf, cdf, RATE, threshold_q
+    )
     assert bound_lower <= prob_riskneutral <= bound_upper
 
 
@@ -220,8 +230,18 @@ def test_crash_bounds_are_monotone_in_horizon():
     """
     lowers, uppers = [], []
     for days in schema.MATURITIES_DAYS:
-        cdf_m = _surface_slice(np.linspace(0.5, 1.5, 25), np.full(25, 0.20), days_to_maturity=days, secid=schema.SPX_SECID)
-        cdf_i = _surface_slice(np.linspace(0.5, 1.5, 25), np.full(25, 0.35), days_to_maturity=days, secid=5001)
+        cdf_m = _surface_slice(
+            np.linspace(0.5, 1.5, 25),
+            np.full(25, 0.20),
+            days_to_maturity=days,
+            secid=schema.SPX_SECID,
+        )
+        cdf_i = _surface_slice(
+            np.linspace(0.5, 1.5, 25),
+            np.full(25, 0.35),
+            days_to_maturity=days,
+            secid=5001,
+        )
         bound_lower, _, bound_upper = crash_bounds(
             risk_neutral_cdf(cdf_i, RATE), risk_neutral_cdf(cdf_m, RATE), RATE, 0.80
         )
@@ -235,7 +255,9 @@ def test_crash_bounds_degenerate_two_point_smile():
     """The thinnest possible smile (one OTM put, one OTM call) on both sides
     still yields a valid, ordered triple -- no crash on illiquid names.
     """
-    cdf_m = risk_neutral_cdf(_surface_slice([0.9, 1.1], [0.20, 0.20], secid=schema.SPX_SECID), RATE)
+    cdf_m = risk_neutral_cdf(
+        _surface_slice([0.9, 1.1], [0.20, 0.20], secid=schema.SPX_SECID), RATE
+    )
     cdf_i = risk_neutral_cdf(_surface_slice([0.9, 1.1], [0.35, 0.35], secid=5001), RATE)
     bound_lower, prob_riskneutral, bound_upper = crash_bounds(cdf_i, cdf_m, RATE, 0.80)
     assert bound_lower <= prob_riskneutral <= bound_upper

@@ -16,14 +16,13 @@ it traded as a going concern (options were halted with the stock on 2023-03-10).
 truncation is not a data gap to paper over -- it *is* the event.
 """
 
-from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 import wrds
 
-from settings import config
 from schema import MATURITIES_DAYS, SPX_SECID
+from settings import config
 
 DATA_DIR = Path(config("DATA_DIR"))
 WRDS_USERNAME = config("WRDS_USERNAME", default="")
@@ -44,8 +43,14 @@ def _int_list(xs):
     return ", ".join(str(int(x)) for x in xs)
 
 
-def pull_surface(secids=CASE_SECIDS, start=WINDOW_START, end=WINDOW_END,
-                 maturities=MATURITIES_DAYS, year=SURFACE_YEAR, wrds_username=WRDS_USERNAME):
+def pull_surface(
+    secids=CASE_SECIDS,
+    start=WINDOW_START,
+    end=WINDOW_END,
+    maturities=MATURITIES_DAYS,
+    year=SURFACE_YEAR,
+    wrds_username=WRDS_USERNAME,
+):
     """Daily standardized vol-surface rows for the case-study secids over [start, end].
 
     Same columns as the monthly ``pull_optionmetrics.pull_vol_surface`` (so the same
@@ -69,8 +74,13 @@ def pull_surface(secids=CASE_SECIDS, start=WINDOW_START, end=WINDOW_END,
     return df
 
 
-def pull_spot(secids=CASE_SECIDS, start=WINDOW_START, end=WINDOW_END,
-              year=SURFACE_YEAR, wrds_username=WRDS_USERNAME):
+def pull_spot(
+    secids=CASE_SECIDS,
+    start=WINDOW_START,
+    end=WINDOW_END,
+    year=SURFACE_YEAR,
+    wrds_username=WRDS_USERNAME,
+):
     """Daily close price per (secid, date) from OptionMetrics ``secprd`` -- the spot
     for moneyness = impl_strike / spot. Columns [secid, date, spot_price]."""
     query = f"""
