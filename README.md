@@ -157,7 +157,7 @@ You can (re)build the chartbook documentation site on its own with:
 ```bash
 doit build_chartbook_site
 ```
-The site is written to `docs/`; open `docs/index.html` to view it. The full `doit` run
+The site is written to `docs/`; use `chartbook browse` to view it. The full `doit` run
 builds it as well.
 
 
