@@ -574,6 +574,42 @@ sphinx_targets = [
 ]
 
 
+CHART_IDS = [
+    "fig1_single_name_bounds", "fig2_median_bounds_market", "fig6_oos_r2",
+    "eda_panel", "fig_etf_sector_bounds", "fig_industry_compare", "fig_svb_case_study",
+]
+CHART_SRC_PNG = [
+    "fig1_single_name_bounds_ext.png", "fig2_median_bounds_market_ext.png",
+    "fig6_oos_r2_ext.png", "eda_panel_ext.png", "fig_etf_sector_bounds_ext.png",
+    "fig_industry_compare_ext.png", "fig_svb_case_study.png",
+]
+TABLE_IDS = ["table1", "table2", "eda_coverage", "etf_bounds",
+             "industry_tightness", "svb_realized"]
+
+
+def task_chart_html():
+    """Wrap each exhibit figure (extended sample) in a self-contained HTML for the
+    chartbook, which renders charts from an HTML path rather than a PNG."""
+    return {
+        "actions": ["python ./src/build_chart_html.py"],
+        "targets": [OUTPUT_DIR / f"{c}.html" for c in CHART_IDS],
+        "file_dep": ["./src/build_chart_html.py",
+                     *[OUTPUT_DIR / p for p in CHART_SRC_PNG]],
+        "clean": True,
+    }
+
+
+def task_table_parquet():
+    """Parquet twins of the summary-table CSVs, for the chartbook data glimpse."""
+    return {
+        "actions": ["python ./src/build_table_parquet.py"],
+        "targets": [OUTPUT_DIR / f"{t}.parquet" for t in TABLE_IDS],
+        "file_dep": ["./src/build_table_parquet.py",
+                     *[OUTPUT_DIR / f"{t}.csv" for t in TABLE_IDS]],
+        "clean": True,
+    }
+
+
 def task_build_chartbook_site():
     """Compile Sphinx Docs"""
     notebook_scripts = [
@@ -583,6 +619,8 @@ def task_build_chartbook_site():
         "./README.md",
         "./chartbook.toml",
         *notebook_scripts,
+        *[OUTPUT_DIR / f"{c}.html" for c in CHART_IDS],       # chart HTML (renders the figures)
+        *[OUTPUT_DIR / f"{t}.parquet" for t in TABLE_IDS],    # table parquet (data glimpse)
     ]
 
     return {
@@ -595,6 +633,8 @@ def task_build_chartbook_site():
         "file_dep": file_dep,
         "task_dep": [
             "run_notebooks",
+            "chart_html",
+            "table_parquet",
         ],
         "clean": True,
     }

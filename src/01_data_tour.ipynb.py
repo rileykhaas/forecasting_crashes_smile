@@ -16,7 +16,7 @@
 # # Data Tour: Forecasting Crashes with a Smile
 #
 # **Can option prices tell you the odds a stock crashes next month?** Martin & Shi
-# (2025) say yes. Investors pay up for crash insurance — out-of-the-money put options —
+# (2025) say yes. Investors pay up for crash insurance, out-of-the-money put options,
 # and that premium is visible in the **volatility smile** (the way an option's implied
 # volatility rises for strikes far below today's price). Read naively, the option-implied
 # ("risk-neutral") crash probability *cries wolf*: it overstates real crash risk, worst
@@ -25,18 +25,18 @@
 # the true probability of a crash.
 #
 # This notebook is a hands-on tour of the repo. It follows one S&P 500 month-end from
-# the cleaned option data all the way to a crash forecast — calling the exact functions
-# the `doit` build uses — and ends on the extensions we built beyond the paper. No prior
+# the cleaned option data all the way to a crash forecast, calling the exact functions
+# the `doit` build uses, and ends on the extensions we built beyond the paper. No prior
 # familiarity with the paper is assumed.
 #
 # ## How the correction works, in one paragraph
 #
 # The risk-neutral crash probability comes straight from option prices (via
-# Breeden–Litzenberger) and needs no model — but it is a probability under the market's
+# Breeden–Litzenberger) and needs no model, but it is a probability under the market's
 # *risk-neutral* measure, which over-weights bad outcomes. To recover the *physical*
 # (real-world) probability, the paper reweights by a power-utility investor's marginal
 # value of a dollar ($\gamma = 2$), which removes the fear premium, and closes the one
-# remaining unknown — how a single stock co-moves with the market — with
+# remaining unknown (how a single stock co-moves with the market) with
 # **Fréchet–Hoeffding copula bounds**. The result is a lower and an upper bound on the
 # true crash probability; under mild comonotonicity (stocks tend to crash *with* the
 # market) the **lower bound is the tight, trustworthy one**. Every term in this
@@ -78,14 +78,14 @@ DATA_DIR = Path(config("DATA_DIR"))
 OUTPUT_DIR = Path(config("OUTPUT_DIR"))
 plt.rcParams["figure.figsize"] = (8, 4.5)
 
-AAPL_SECID = 101594  # Apple, from optionm_security_names -- the firm we follow below
+AAPL_SECID = 101594  # Apple, from optionm_security_names, the firm we follow below
 ONE_YEAR = 365       # the 1-year maturity: where Martin & Shi find the bound tightest
 REPL_END = pd.Timestamp("2022-12-31")  # the paper's window; we stay inside it here
 
 # %% [markdown]
 # ## Walkthrough: from one smile to a forecast
 #
-# The steps below follow a single Apple month-end through the engine — from the raw
+# The steps below follow a single Apple month-end through the engine, from the raw
 # volatility smile to a crash-probability forecast, and a check against the paper's
 # published Table 1.
 
@@ -107,13 +107,13 @@ surface.info()
 surface.head()
 
 # %% [markdown]
-# ### Step 2. Inspect one volatility smile — Apple
+# ### Step 2. Inspect one volatility smile, Apple
 #
-# We follow a single, familiar name — **Apple (AAPL)** — through the engine. We take its
+# We follow a single, familiar name, **Apple (AAPL)**, through the engine. We take its
 # **1-year (365-day)** smile on the most recent month-end *inside the paper's 1996–2022
 # window* where both Apple and the S&P 500 have a clean surface (we need the market's
 # surface in Step 5). One year is the horizon where Martin & Shi find the lower bound
-# tightest — closest to the true crash probability — so it is the natural showcase. The
+# tightest, closest to the true crash probability, so it is the natural showcase. The
 # upward tilt toward low moneyness is the **skew**: out-of-the-money puts (crash
 # insurance) trade at higher implied volatility, and a single stock shows a more
 # pronounced skew than the diversified index. That asymmetry is what the method extracts.
@@ -177,7 +177,7 @@ plt.show()
 #
 # Reading the CDF at each crash threshold $q$ (a gross return at or below $q$ is a
 # crash of $1-q$) gives the risk-neutral crash probability. This is the number the
-# paper argues *overstates* the true probability — it has not yet been corrected
+# paper argues *overstates* the true probability, it has not yet been corrected
 # for the fear premium.
 
 # %%
@@ -194,16 +194,16 @@ pd.DataFrame(
 #
 # `bounds.crash_bounds` combines stages A3 and A4: the power-utility fear correction
 # ($\gamma = 2$, via `utility_correction.py`) and the Fréchet–Hoeffding bounds. Because
-# Apple is *not* the market, the bounds do real work here — they bracket the true crash
+# Apple is *not* the market, the bounds do real work here, they bracket the true crash
 # probability from below and above, closing the one unknown, how Apple co-moves with the
 # market. That needs the **market's** distribution too, so we build the S&P 500's 1-year
 # CDF for the same date and pass both. Notice the ordering: the fear-corrected
-# **lower bound sits below the risk-neutral probability** from Step 4 — the fear premium,
-# removed — and below the upper bound.
+# **lower bound sits below the risk-neutral probability** from Step 4, the fear premium,
+# removed, and below the upper bound.
 #
 # (The index is the special $i = m$ case: a security is comonotonic with itself, so its
 # lower bound holds with *equality* and equals the market crash probability of the
-# paper's Result 3 — exactly how Figure 2's market line is computed.)
+# paper's Result 3, exactly how Figure 2's market line is computed.)
 
 # %%
 market_cdf = risk_neutral_cdf(one_year_smile(schema.SPX_SECID), rate)
@@ -237,7 +237,7 @@ results.info()
 results.head()
 
 # %% [markdown]
-# ### Step 7. Replication check — does the lower bound track realized crashes?
+# ### Step 7. Replication check, does the lower bound track realized crashes?
 #
 # The paper's central claim: pooled across firms, the mean **lower bound sits close
 # to the realized crash frequency**, while the risk-neutral probability and the
@@ -275,7 +275,7 @@ check
 # The bar chart makes the takeaway visual: the realized crash frequency and the
 # option-implied lower bound sit side by side, while the risk-neutral probability
 # and (more so) the upper bound run well above both. This is the pattern Table 1
-# reproduces across every threshold and horizon — the formal, tolerance-tested
+# reproduces across every threshold and horizon, the formal, tolerance-tested
 # version lives in `exhibit_table1.py` and the report.
 
 # %%
@@ -293,23 +293,23 @@ plt.show()
 # ## The product: extensions beyond the paper
 #
 # The replication above is the foundation. The point of the project is what we build on
-# top of it — the *same engine*, pointed at new questions. Three extensions live in the
+# top of it, the *same engine*, pointed at new questions. Three extensions live in the
 # report and the chartbook:
 #
-# 1. **Sector-ETF crash bounds** (`exhibit_etf_bounds`) — the machinery applied directly
+# 1. **Sector-ETF crash bounds** (`exhibit_etf_bounds`), the machinery applied directly
 #    to the eleven Select Sector SPDR ETFs (plus KRE), a cleaner test of the theory since
 #    comonotonicity is more plausible for a diversified ETF than a single name.
-# 2. **Proxy vs. direct** (`exhibit_industry_compare`) — the paper measures an industry's
+# 2. **Proxy vs. direct** (`exhibit_industry_compare`), the paper measures an industry's
 #    crash risk as the *average* of its constituents' bounds; we show that overstates the
 #    diversified sector, which the direct ETF bound prices correctly.
-# 3. **The SVB case study** (`exhibit_svb`) — shown live below.
+# 3. **The SVB case study** (`exhibit_svb`), shown live below.
 #
 # ### Highlight: did the options market see SVB coming?
 #
 # We run the identical engine at **daily** frequency through the March 2023 collapse of
 # Silicon Valley Bank, reading one event at three levels: the failed bank (SIVB), the
-# regional-bank ETF (KRE), and broad financials (XLF). Because the outcome is known — the
-# bank failed, the index did not — it is a clean test of whether the measure classifies
+# regional-bank ETF (KRE), and broad financials (XLF). Because the outcome is known, the
+# bank failed, the index did not, it is a clean test of whether the measure classifies
 # the event as *contained* or *systemic*.
 
 # %%
@@ -321,7 +321,7 @@ svb_bounds = compute_svb_bounds(load_svb_surface(), svb_spot, load_svb_zero())
 build_figure_svb(svb_bounds)
 
 # %% [markdown]
-# The stress decays sharply across the three levels — SIVB's crash probability explodes
+# The stress decays sharply across the three levels, SIVB's crash probability explodes
 # to ~36% on 9 March (its last trading day, after which the surface simply ends), the
 # regional-bank sector (KRE) peaks near 18%, and broad financials (XLF) reach only ~6%.
 # The market priced the event as concentrated in the name and its sector, not systemic.
@@ -335,9 +335,9 @@ svb_realized_table(svb_bounds, svb_spot)
 # %% [markdown]
 # ## Where to go next
 #
-# - **The report** (`reports/report.pdf`) — the replicated Table 1–2 and Figures 1, 2, 6,
+# - **The report** (`reports/report.pdf`), the replicated Table 1–2 and Figures 1, 2, 6,
 #   the extension exhibits above, and the full write-up.
-# - **The chartbook** (`docs/`) — every intermediate table and every figure, each with a
+# - **The chartbook** (`docs/`), every intermediate table and every figure, each with a
 #   narrative page and its data dictionary.
-# - **`dodo.py`** — the end-to-end build: `doit` reproduces every parquet, table, figure,
+# - **`dodo.py`**, the end-to-end build: `doit` reproduces every parquet, table, figure,
 #   and this notebook from raw WRDS data.

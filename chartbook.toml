@@ -1,9 +1,9 @@
 [project]
-# Explicit pipeline id so dataframes are labelled "forecasting_crashes_smile:..."
-# rather than deriving a personal scope from the git remote (this is a shared
-# project, not one owner's).
-id = "forecasting_crashes_smile"
-name = "forecasting_crashes_smile"
+# Short explicit pipeline id so page titles read "fcs:<dataframe>" (the chartbook
+# template prefixes titles with the id) instead of a long, cut-off scope. Set
+# explicitly rather than deriving a personal scope from the git remote.
+id = "fcs"
+name = "Forecasting Crashes with a Smile"
 description = "Replication and extension of Martin & Shi (2025), 'Forecasting Crashes with a Smile'"
 maintainer = "Riley Haas and Marija Jovicic"
 contributors = ["Riley Haas and Marija Jovicic"]
@@ -30,11 +30,11 @@ path = "_output/01_data_tour.ipynb"
 [dataframes.sp500_secid_universe]
 name = "S&P 500 Constituent secid Universe"
 description = "Month-end panel of S&P 500 index members with their OptionMetrics secid attached; the firm universe on which the crash-probability bounds are computed."
-sources = ["CRSP", "OptionMetrics", "WRDS CRSP-OptionMetrics Link"]
+sources = ["CRSP", "OptionMetrics"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "CRSP / OptionMetrics via WRDS — subscription required; raw data must not be redistributed or committed to git."
+license = "CRSP / OptionMetrics via WRDS, subscription required; raw data must not be redistributed or committed to git."
 restrictions = "Academic WRDS subscription. Do not commit the underlying parquet (it lives in the gitignored _data/)."
 pull_method = "WRDS SQL (crsp.msp500list, wrdsapps_link_crsp_optionm.opcrsphist) via pull_sp500.py + pull_link.py, joined onto NYSE month-ends in sp500_secid_universe.py"
 tags = ["S&P 500", "constituents", "OptionMetrics", "CRSP", "universe"]
@@ -44,13 +44,13 @@ docs_path = "./docs_src/dataframes/sp500_secid_universe.md"
 
 [dataframes.optionm_vol_surface]
 name = "OptionMetrics Volatility Surface (raw)"
-description = "Raw IvyDB volatility-surface points (implied vol by strike, delta, cp_flag) at the 1/3/6/12-month maturities, month-end, for the S&P 500 index, constituents, and the extension ETFs. The option-implied 'smile' the crash bounds are built from."
-sources = ["OptionMetrics IvyDB (optionm_all.vsurfd)"]
+description = "Raw OptionMetrics standardized volatility surface (monthly) for the pulled secids, before cleaning."
+sources = ["OptionMetrics"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "OptionMetrics via WRDS — subscription required; raw data must not be redistributed or committed to git."
-restrictions = "Academic WRDS subscription. Raw pull (unfiltered); Appendix-D cleaning happens in clean_surface.py (#17). Large table; lives in gitignored _data/."
+license = "OptionMetrics via WRDS, subscription required; raw data must not be redistributed or committed to git."
+restrictions = "Academic WRDS subscription. Raw pull (unfiltered); Appendix-D cleaning happens in clean_surface.py. Large table; lives in gitignored _data/."
 pull_method = "WRDS SQL over per-year optionm_all.vsurfd{YYYY}, filtered to universe+ETF secids, days in {30,91,182,365}, and month-end dates (pull_optionmetrics.py)"
 tags = ["OptionMetrics", "volatility surface", "implied vol", "smile", "raw"]
 date_col = "date"
@@ -60,12 +60,12 @@ docs_path = "./docs_src/dataframes/optionm_vol_surface.md"
 [dataframes.optionm_zero_curve]
 name = "OptionMetrics Zero-Coupon Curve (raw)"
 description = "Raw OptionMetrics zero-coupon yield curve (rate by maturity in days); the risk-free rates used to price options and form gross returns."
-sources = ["OptionMetrics IvyDB (optionm_all.zerocd)"]
+sources = ["OptionMetrics"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "OptionMetrics via WRDS — subscription required; raw data must not be redistributed or committed to git."
-restrictions = "Academic WRDS subscription. Raw pull; maturity interpolation happens in rates.py (#17). Lives in gitignored _data/."
+license = "OptionMetrics via WRDS, subscription required; raw data must not be redistributed or committed to git."
+restrictions = "Academic WRDS subscription. Raw pull; maturity interpolation happens in rates.py. Lives in gitignored _data/."
 pull_method = "WRDS SQL over optionm_all.zerocd across the sample window (pull_optionmetrics.py)"
 tags = ["OptionMetrics", "risk-free", "zero curve", "rates", "raw"]
 date_col = "date"
@@ -75,11 +75,11 @@ docs_path = "./docs_src/dataframes/optionm_zero_curve.md"
 [dataframes.optionm_security_names]
 name = "OptionMetrics Security Name History (secnmd)"
 description = "OptionMetrics secid name history (ticker/issuer by effect_date) for the pulled universe; used to label (secid, date) rows with the ticker active in that month via merge_asof."
-sources = ["OptionMetrics IvyDB (optionm_all.secnmd)"]
+sources = ["OptionMetrics"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "OptionMetrics via WRDS — subscription required; raw data must not be redistributed or committed to git."
+license = "OptionMetrics via WRDS, subscription required; raw data must not be redistributed or committed to git."
 restrictions = "Academic WRDS subscription. Lives in gitignored _data/."
 pull_method = "WRDS SQL over optionm_all.secnmd for the pulled secids (pull_optionmetrics.py)"
 tags = ["OptionMetrics", "secid", "ticker", "name history"]
@@ -89,26 +89,26 @@ docs_path = "./docs_src/dataframes/optionm_security_names.md"
 
 [dataframes.optionm_pull_secids]
 name = "OptionMetrics Pull Universe (secid manifest)"
-description = "The secid set the OptionMetrics surface was pulled for, each tagged by source: the S&P 500 index, its constituents, or the extension sector ETFs (Select Sector SPDRs + KRE). Documents exactly what the replication vs the extension covers."
-sources = ["Derived (sp500_secid_universe #14 + OptionMetrics secnmd resolution)"]
+description = "The secid set the surface was pulled for, tagged index / constituent / sector_etf."
+sources = ["Derived"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from CRSP / OptionMetrics via WRDS — subscription required."
+license = "Derived from CRSP / OptionMetrics via WRDS, subscription required."
 restrictions = "Lives in gitignored _data/."
-pull_method = "Union of get_universe_secids(#14) + SPX_SECID + secnmd-resolved ETF secids (pull_optionmetrics.py)"
+pull_method = "Union of get_universe_secids + SPX_SECID + secnmd-resolved ETF secids (pull_optionmetrics.py)"
 tags = ["OptionMetrics", "secid", "universe", "sector ETF", "extension"]
 path = "./_data/optionm_pull_secids.parquet"
 docs_path = "./docs_src/dataframes/optionm_pull_secids.md"
 
 [dataframes.realized_returns]
 name = "Realized Forward Returns"
-description = "Gross forward returns R_{t->t+tau} per (date, secid, horizon), from CRSP monthly returns with delisting folded in (CIZ mthret). Threshold-independent: stores the realized return itself, not a crash flag. The realized outcome the option-implied crash bounds are tested against."
-sources = ["CRSP", "WRDS CRSP-OptionMetrics Link"]
+description = "CRSP forward gross returns per (date, secid, horizon), with delisting returns integrated."
+sources = ["CRSP", "OptionMetrics"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from CRSP via WRDS — subscription required; not redistributable."
+license = "Derived from CRSP via WRDS, subscription required; not redistributable."
 restrictions = "Cleaned output; lives in gitignored _data/. Regenerate with `doit build_realized_returns`."
 pull_method = "realized_returns.py: rolling h-month gross-return product from the CRSP monthly file, keyed by secid via the date-valid best-score CRSP-OptionMetrics link; scoped to the analysis universe (optionm_pull_secids)"
 tags = ["CRSP", "realized returns", "forward returns", "crash", "cleaned"]
@@ -118,12 +118,12 @@ docs_path = "./docs_src/dataframes/realized_returns.md"
 
 [dataframes.clean_surface]
 name = "Cleaned Volatility Surface"
-description = "The filtered, tidy option-implied volatility surface: one row per (date, secid, maturity, moneyness) with implied vol and CRSP spot, after the paper's Appendix-D filters. The analysis-ready 'smile' the crash bounds are computed from."
-sources = ["OptionMetrics IvyDB", "CRSP"]
+description = "The cleaned, Appendix-D-filtered volatility surface with CRSP spot attached, the engine's input."
+sources = ["OptionMetrics", "CRSP"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+license = "Derived from OptionMetrics / CRSP via WRDS, subscription required; not redistributable."
 restrictions = "Cleaned output; lives in gitignored _data/. Regenerate with `doit clean_surface`."
 pull_method = "clean_surface.py: Appendix-D filters (CRSP spot exists; strike>0; dispersion in (0,0.05); >10 strikes/firm-month-maturity) on optionm_vol_surface, moneyness = impl_strike/CRSP spot"
 tags = ["volatility surface", "implied vol", "smile", "cleaned", "replication"]
@@ -134,11 +134,11 @@ docs_path = "./docs_src/dataframes/clean_surface.md"
 [dataframes.rates]
 name = "Risk-Free Zero Curve (cleaned)"
 description = "The OptionMetrics zero-coupon risk-free curve, interpolated to the 1/3/6/12-month surface maturities and sampled at each month-end formation date. Joins onto clean_surface for option pricing."
-sources = ["OptionMetrics IvyDB"]
+sources = ["OptionMetrics"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from OptionMetrics via WRDS — subscription required; not redistributable."
+license = "Derived from OptionMetrics via WRDS, subscription required; not redistributable."
 restrictions = "Cleaned output; lives in gitignored _data/. Regenerate with `doit rates`."
 pull_method = "rates.py: linear interpolation of optionm_zero_curve to {30,91,182,365} days at each month-end"
 tags = ["risk-free", "zero curve", "rates", "cleaned"]
@@ -148,12 +148,12 @@ docs_path = "./docs_src/dataframes/rates.md"
 
 [dataframes.results]
 name = "Crash-Probability Bounds (engine output)"
-description = "Per (date, secid, horizon, threshold): lower bound P^L, risk-neutral P*, upper bound P^U (Result 3), plus the realized gross return and crash flag. Includes the S&P 500 index (i = m, eq. 7). The table every figure and Table 1 reads from."
-sources = ["Derived (engine: rnd + utility_correction + bounds)"]
+description = "Engine output: lower/risk-neutral/upper crash bounds and the realized outcome, per (date, secid, horizon, threshold)."
+sources = ["Derived"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+license = "Derived from OptionMetrics / CRSP via WRDS, subscription required; not redistributable."
 restrictions = "Engine output; lives in gitignored _output/. Regenerate with `doit pipeline`."
 pull_method = "run_pipeline.py: per (date, maturity) build risk-neutral CDFs (rnd.py), fear-correct + Frechet-Hoeffding bounds (utility_correction.py, bounds.py), join realized_returns"
 tags = ["crash", "bounds", "risk-neutral", "replication", "engine output"]
@@ -162,83 +162,83 @@ path = "./_output/results.parquet"
 docs_path = "./docs_src/dataframes/results.md"
 
 [dataframes.table1]
-name = "Table 1 — Summary Statistics (replication)"
-description = "Our replication of Martin & Shi (2025) Table 1 over 1996-2022: realized crash frequency, lower/upper bounds, and risk-neutral probability, by threshold and horizon, averaged across firms (T) and across time (N). Long form."
-sources = ["Derived (exhibit_table1.py from results.parquet)"]
+name = "Table 1: Summary Statistics (replication)"
+description = "Replication of Martin & Shi (2025) Table 1, summary statistics of the bounds vs. realized crashes, 1996-2022."
+sources = ["Derived"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+license = "Derived from OptionMetrics / CRSP via WRDS, subscription required; not redistributable."
 restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit table1`."
 pull_method = "exhibit_table1.py: results.parquet inner-joined to sp500_secid_universe (constituent member-months, 1996-2022), two-block mean/s.d. per q and horizon"
 tags = ["crash", "replication", "Table 1", "summary statistics", "exhibit"]
-path = "./_output/table1.csv"
+path = "./_output/table1.parquet"
 docs_path = "./docs_src/dataframes/table1.md"
 
 [dataframes.table2]
-name = "Table 2 — Calibration Regressions (replication)"
-description = "Our replication of Martin & Shi (2025) Table 2 over 1996-2022: for each crash size q, horizon tau, and measure (lower bound / risk-neutral / upper bound), the pooled OLS of the realized crash indicator on the measure -- alpha, beta, R^2 with two-way clustered (Thompson 2011) and block-bootstrap (Martin & Wagner 2019) standard errors. The lower bound calibrates at beta approx 1."
-sources = ["Derived (exhibit_table2.py from results.parquet)"]
+name = "Table 2: Calibration Regressions (replication)"
+description = "Replication of Table 2, calibration regressions (alpha, beta, R2) of realized crashes on each measure, 1996-2022."
+sources = ["Derived"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+license = "Derived from OptionMetrics / CRSP via WRDS, subscription required; not redistributable."
 restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit table2`."
 pull_method = "exhibit_table2.py: pooled OLS I(R<=q)=a+b*X per (q, horizon, measure) over S&P 500 constituent member-months, with two-way clustered and horizon-block bootstrap SEs"
 tags = ["crash", "replication", "Table 2", "regression", "calibration", "exhibit"]
-path = "./_output/table2.csv"
+path = "./_output/table2.parquet"
 docs_path = "./docs_src/dataframes/table2.md"
 
 [dataframes.eda_coverage]
-name = "EDA — Per-Year Panel Coverage"
-description = "Our own exploratory summary of the underlying option/return panel (issue #33): per-year coverage of the S&P 500 constituent member-months the replication runs on — number of names, firm-months, option quotes, quotes per firm-month, median implied vol, and the realized 12-month 20% crash frequency. Built from clean_surface.parquet + realized_returns.parquet (not the derived bounds)."
-sources = ["Derived (exhibit_eda.py from clean_surface + realized_returns)"]
+name = "EDA: Per-Year Panel Coverage"
+description = "Per-year coverage of the underlying option/return panel."
+sources = ["Derived"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+license = "Derived from OptionMetrics / CRSP via WRDS, subscription required; not redistributable."
 restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit eda`."
 pull_method = "exhibit_eda.py: constituent-restricted clean_surface grouped by year for coverage stats; realized_returns for the 12-month 20% crash frequency"
 tags = ["EDA", "coverage", "summary statistics", "option surface", "underlying data"]
-path = "./_output/eda_coverage.csv"
+path = "./_output/eda_coverage.parquet"
 docs_path = "./docs_src/dataframes/eda_coverage.md"
 
 [dataframes.etf_bounds]
-name = "Sector-ETF Crash Bounds vs. Realized (extension #34)"
-description = "Per Select Sector SPDR ETF (11 sectors + KRE) and the S&P 500 index: the mean lower bound, risk-neutral probability, and upper bound against the realized 20% crash frequency, at the 12-month horizon. An original extension applying the paper's crash-probability machinery directly to sector-ETF option surfaces — the direct measure, versus the paper's average-of-constituents proxy."
-sources = ["Derived (exhibit_etf_bounds.py from results.parquet)"]
+name = "Sector-ETF Crash Bounds vs. Realized"
+description = "Sector-ETF mean crash bounds vs. realized frequency, 12-month 20% crash."
+sources = ["Derived"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+license = "Derived from OptionMetrics / CRSP via WRDS, subscription required; not redistributable."
 restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit etf_bounds`."
 pull_method = "exhibit_etf_bounds.py: select the sector_etf secids (+ SPX) from results.parquet, mean bounds and realized crash frequency per ETF at q=0.80, horizon=12"
 tags = ["sector ETF", "SPDR", "crash bounds", "extension", "comonotonicity", "KRE"]
-path = "./_output/etf_bounds.csv"
+path = "./_output/etf_bounds.parquet"
 docs_path = "./docs_src/dataframes/etf_bounds.md"
 
 [dataframes.industry_tightness]
-name = "Industry Proxy vs. Direct Sector Bound (extension #34)"
-description = "For each Fama-French industry with a clean Select Sector SPDR counterpart: the mean proxy lower bound (equal-weighted average of constituent bounds, the paper's Figure-10 measure) vs. the direct sector-ETF lower bound vs. the realized crash frequency, at the 12-month horizon. Quantifies the 'tightness' gap — the proxy overstates the diversified sector's crash risk, while the direct measure hugs realized."
-sources = ["Derived (exhibit_industry_compare.py from results.parquet + CRSP SIC)"]
+name = "Industry Proxy vs. Direct Sector Bound"
+description = "Industry proxy vs. direct sector-ETF bound, and each measure's gap to realized."
+sources = ["Derived"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+license = "Derived from OptionMetrics / CRSP via WRDS, subscription required; not redistributable."
 restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit industry_compare`."
 pull_method = "exhibit_industry_compare.py: FF12 industry per constituent (ff_industry.py from CRSP siccd); proxy = mean constituent lower bound per industry; direct = matched SPDR ETF bound"
 tags = ["sector ETF", "Fama-French", "proxy", "direct measure", "comonotonicity", "extension"]
-path = "./_output/industry_tightness.csv"
+path = "./_output/industry_tightness.parquet"
 docs_path = "./docs_src/dataframes/industry_tightness.md"
 
 [dataframes.svb_daily_bounds]
-name = "SVB Case Study — Daily Crash Bounds (extension #31)"
-description = "Daily option-implied crash bounds (lower bound P^L, risk-neutral P*, upper bound P^U) for SIVB, KRE, XLF, and the S&P 500, Feb-Mar 2023, at the four horizons and thresholds. Produced by running the monthly engine (rnd + fear correction + bounds) day by day on the case-study surfaces. SIVB's rows end 2023-03-09, the day it collapsed and last traded as a going concern."
-sources = ["Derived (exhibit_svb.py from daily OptionMetrics vsurfd + secprd + zerocd)"]
+name = "SVB Case Study: Daily Crash Bounds"
+description = "Daily crash bounds for SIVB/KRE/XLF/SPX through the March-2023 SVB collapse."
+sources = ["Derived"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from OptionMetrics via WRDS — subscription required; not redistributable."
+license = "Derived from OptionMetrics via WRDS, subscription required; not redistributable."
 restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit svb_case_study`."
 pull_method = "exhibit_svb.py: daily Appendix-D cleaning (exact-date spot) -> run_pipeline day by day for SIVB/KRE/XLF/SPX"
 tags = ["SVB", "case study", "daily", "regional banks", "contagion", "extension", "KRE", "XLF"]
@@ -246,68 +246,137 @@ path = "./_output/svb_daily_bounds.parquet"
 docs_path = "./docs_src/dataframes/svb_daily_bounds.md"
 
 [dataframes.svb_realized]
-name = "SVB Case Study — Probability vs. Realized (extension #31)"
-description = "The known-resolution table for the SVB episode: each asset's (SIVB, KRE, XLF) peak risk-neutral and lower-bound 20% crash probability during Feb-Mar 2023 against its realized drawdown from the Mar 8 pre-collapse close to the March trough, and whether a 20% crash occurred. The peak probabilities (36/18/6%) rank-order the realized drawdowns (-60/-27/-11%); the 20% line separates crash (SIVB, KRE) from no-crash (XLF)."
-sources = ["Derived (exhibit_svb.py from svb_daily_bounds + daily spot)"]
+name = "SVB Case Study: Probability vs. Realized"
+description = "SVB episode: peak crash probability vs. realized drawdown per asset."
+sources = ["Derived"]
 providers = ["WRDS"]
 provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
-license = "Derived from OptionMetrics via WRDS — subscription required; not redistributable."
+license = "Derived from OptionMetrics via WRDS, subscription required; not redistributable."
 restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit svb_case_study`."
 pull_method = "exhibit_svb.py: peak P*/P^L per asset vs realized drawdown (Mar 8 close -> March trough)"
 tags = ["SVB", "case study", "realized", "calibration", "contained", "extension"]
-path = "./_output/svb_realized.csv"
+path = "./_output/svb_realized.parquet"
 docs_path = "./docs_src/dataframes/svb_realized.md"
 
 
 [charts]
 
 [charts.fig1_single_name_bounds]
-name = "Figure 1 — Single-Name Crash Bounds (AAPL & AIG)"
-description = "Time series of the option-implied lower and upper bounds on the one-month probability of a 20% crash for Apple and AIG, 1996-2022 (Martin & Shi 2025, Figure 1). The band between each name's bounds is shaded; AIG's crash risk spikes during the 2008-09 crisis while Apple's is elevated in the early-2000s tech unwind."
+name = "Figure 1: Single-Name Crash Bounds (AAPL & AIG)"
+description = "Single-name option-implied lower/upper crash-probability bounds for Apple and AIG, 1-month 20% crash, extended sample through 2025 (Martin & Shi 2025, Figure 1)."
 dataframe = "results"
-path = "./_output/fig1_single_name_bounds.png"
+tags = ["crash risk", "option-implied", "single name", "replication"]
+frequency = "Monthly"
+observation_period = "Month-end"
+seasonal_adjustment = "None"
+release_lag = "OptionMetrics/CRSP via WRDS (~1 month)"
+release_timing = "Monthly"
+units = "Probability of a 20% crash"
+start_date = "1996-01-31"
+series = ["AAPL bounds", "AIG bounds"]
+mnemonic = "FIG1"
+path = "./_output/fig1_single_name_bounds.html"
 docs_path = "./docs_src/charts/fig1_single_name_bounds.md"
 
 [charts.fig2_median_bounds_market]
-name = "Figure 2 — CS-Median Bounds + S&P 500 Index Crash Probability"
-description = "Cross-sectional median across S&P 500 constituents of the upper and lower option-implied bounds on the one-month probability of a 20% crash, with the S&P 500 index's own crash probability (the i=m lower bound), 1996-2022 (Martin & Shi 2025, Figure 2). The market crash probability is consistently lower and smoother than the typical constituent's."
+name = "Figure 2: CS-Median Bounds + S&P 500 Crash Probability"
+description = "Cross-sectional median constituent bounds and the S&P 500 index's own crash probability, 1-month 20% crash, extended sample through 2025 (Figure 2)."
 dataframe = "results"
-path = "./_output/fig2_median_bounds_market.png"
+tags = ["crash risk", "cross-section", "market", "replication"]
+frequency = "Monthly"
+observation_period = "Month-end"
+seasonal_adjustment = "None"
+release_lag = "OptionMetrics/CRSP via WRDS (~1 month)"
+release_timing = "Monthly"
+units = "Probability of a 20% crash"
+start_date = "1996-01-31"
+series = ["CS-median lower bound", "CS-median upper bound", "S&P 500"]
+mnemonic = "FIG2"
+path = "./_output/fig2_median_bounds_market.html"
 docs_path = "./docs_src/charts/fig2_median_bounds_market.md"
 
 [charts.fig6_oos_r2]
-name = "Figure 6 — Out-of-Sample R² of the Lower Bound vs. Risk-Neutral Forecasts"
-description = "Cumulative out-of-sample R² (vs. a firm-specific historical-average benchmark) for the option-implied lower bound (OIB-LB), the raw risk-neutral probability, and the trailing-regression-adjusted risk-neutral forecast, for 20% crashes at 1/3/6/12-month horizons, 1996-2022 (Martin & Shi 2025, Figure 6). Panel A adjusts the risk-neutral with an expanding-window regression, Panel B with a 3-year rolling window. The lower bound is on top at every horizon; the rolling-window fix goes stale and turns negative at long horizons after 2008-10."
+name = "Figure 6: Out-of-Sample R² of the Lower Bound"
+description = "Cumulative out-of-sample R² of the lower bound vs. the risk-neutral and adjusted risk-neutral forecasts, 1/3/6/12-month horizons, extended sample through 2025 (Figure 6)."
 dataframe = "results"
-path = "./_output/fig6_oos_r2.png"
+tags = ["out-of-sample", "forecast", "replication"]
+frequency = "Monthly"
+observation_period = "Month-end"
+seasonal_adjustment = "None"
+release_lag = "OptionMetrics/CRSP via WRDS (~1 month)"
+release_timing = "Monthly"
+units = "Out-of-sample R-squared (%)"
+start_date = "1996-01-31"
+series = ["OIB-LB", "RN (alpha=0, beta=1)", "RN (alpha-hat, beta-hat)"]
+mnemonic = "FIG6"
+path = "./_output/fig6_oos_r2.html"
 docs_path = "./docs_src/charts/fig6_oos_r2.md"
 
 [charts.eda_panel]
-name = "EDA — The Underlying Option/Return Panel at a Glance"
-description = "Our own exploratory 2x2 view of the raw inputs (issue #33), over S&P 500 constituent member-months 1996-2022: (a) number of constituents carrying an option surface each month; (b) quote availability across the moneyness x maturity grid; (c) the implied-volatility smile by maturity; (d) the realized gross-return distribution at 1- vs 12-month horizons with the 20%/30% crash thresholds. Shows the inputs are well-populated in the downside-put tail the bound integrates, and that crashes are rare but non-trivial."
+name = "EDA: The Underlying Option/Return Panel"
+description = "Exploratory 2x2 view of the underlying panel: coverage over time, moneyness x maturity availability, the IV smile, and the realized-return distribution, extended sample through 2025."
 dataframe = "clean_surface"
-path = "./_output/eda_panel.png"
+tags = ["EDA", "coverage", "volatility smile", "extension"]
+frequency = "Monthly"
+observation_period = "Month-end"
+seasonal_adjustment = "None"
+release_lag = "OptionMetrics/CRSP via WRDS (~1 month)"
+release_timing = "Monthly"
+units = "Various (counts, implied vol, density)"
+start_date = "1996-01-31"
+series = ["Coverage", "Availability", "IV smile", "Return distribution"]
+mnemonic = "EDA"
+path = "./_output/eda_panel.html"
 docs_path = "./docs_src/charts/eda_panel.md"
 
 [charts.fig_etf_sector_bounds]
-name = "Sector-ETF Crash Probabilities vs. the S&P 500 (extension #34)"
-description = "Original extension (issue #34): each Select Sector SPDR ETF's direct lower-bound one-month 20% crash probability over time, with the S&P 500 index's own crash probability (the i=m bound) overlaid, 1996-2022. The direct sector measure, in contrast to the paper's average-of-constituents proxy. Technology spikes in 2000-02, financials and regional banks (KRE) in 2008-09, energy in 2014-16; defensive sectors stay below the index."
+name = "Sector-ETF Crash Probabilities vs. the S&P 500"
+description = "Direct sector-ETF lower-bound crash probabilities (11 Select Sector SPDRs + KRE), each against the S&P 500, extended sample through 2025."
 dataframe = "results"
-path = "./_output/fig_etf_sector_bounds.png"
+tags = ["sector ETF", "crash risk", "extension"]
+frequency = "Monthly"
+observation_period = "Month-end"
+seasonal_adjustment = "None"
+release_lag = "OptionMetrics/CRSP via WRDS (~1 month)"
+release_timing = "Monthly"
+units = "Probability of a 20% crash"
+start_date = "1998-12-31"
+series = ["Sector ETF lower bound", "S&P 500"]
+mnemonic = "ETF"
+path = "./_output/fig_etf_sector_bounds.html"
 docs_path = "./docs_src/charts/fig_etf_sector_bounds.md"
 
 [charts.fig_industry_compare]
-name = "Industry Proxy vs. Direct Sector-ETF Bound (extension #34)"
-description = "The paper's average-of-constituents proxy (orange) vs. our direct sector-ETF lower bound (blue), one-month 20% crash probability, 1996-2022, for the six Fama-French industries with a clean SPDR counterpart. The proxy lies above the direct measure in every panel — averaging individually risky names overstates the diversified sector's crash risk. Health care is the clearest case: a persistently elevated proxy against a near-zero direct bound."
+name = "Industry Proxy vs. Direct Sector-ETF Bound"
+description = "The paper's average-of-constituents proxy vs. our direct sector-ETF bound, for the six matched Fama-French industries, extended sample through 2025."
 dataframe = "results"
-path = "./_output/fig_industry_compare.png"
+tags = ["Fama-French", "proxy", "sector ETF", "extension"]
+frequency = "Monthly"
+observation_period = "Month-end"
+seasonal_adjustment = "None"
+release_lag = "OptionMetrics/CRSP via WRDS (~1 month)"
+release_timing = "Monthly"
+units = "Probability of a 20% crash"
+start_date = "1996-01-31"
+series = ["Proxy (avg. of constituents)", "Direct (ETF)"]
+mnemonic = "INDCMP"
+path = "./_output/fig_industry_compare.html"
 docs_path = "./docs_src/charts/fig_industry_compare.md"
 
 [charts.fig_svb_case_study]
-name = "SVB Case Study — Daily Crash Bounds at Three Levels (extension #31)"
-description = "The March 2023 Silicon Valley Bank collapse read daily at three levels: risk-neutral probability (red) and option-implied lower bound (blue) of a 20% one-month crash for SIVB (the failed bank), KRE (regional banks), and XLF (broad financials), Feb-Mar 2023. SIVB's crash probability explodes to 36% on Mar 9 and its surface then ends as the bank fails; the stress decays across the levels (36% to 18% to 6%), the market pricing the event as contained to the name and its sector rather than systemic."
+name = "SVB Case Study: Daily Crash Bounds at Three Levels"
+description = "Daily risk-neutral and lower-bound crash probabilities for SIVB, KRE, and XLF through the March-2023 SVB collapse."
 dataframe = "svb_daily_bounds"
-path = "./_output/fig_svb_case_study.png"
+tags = ["SVB", "case study", "daily", "extension"]
+frequency = "Daily"
+observation_period = "Daily close"
+seasonal_adjustment = "None"
+release_lag = "1 trading day (WRDS)"
+release_timing = "Daily"
+units = "Probability of a 20% crash"
+start_date = "2023-02-01"
+series = ["Risk-neutral P*", "Lower bound P^L"]
+mnemonic = "SVB"
+path = "./_output/fig_svb_case_study.html"
 docs_path = "./docs_src/charts/fig_svb_case_study.md"
-
