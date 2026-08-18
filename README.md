@@ -107,7 +107,7 @@ to match the issue assignee); tasks can be shared, and both members review every
 |-------|------|-------|
 | [#32](https://github.com/rileykhaas/forecasting_crashes_smile/issues/32) | chartbook manifests + LaTeX wiring + full `doit` clean run | Riley & Marija |
 | [#35](https://github.com/rileykhaas/forecasting_crashes_smile/issues/35) | Notebook tour — cleaned data + analysis walkthrough (`docs_src`) | Riley |
-| [#36](https://github.com/rileykhaas/forecasting_crashes_smile/issues/36) | LaTeX narrative — overview, successes/challenges, data sources | Riley |
+| [#36](https://github.com/rileykhaas/forecasting_crashes_smile/issues/36) | LaTeX narrative — overview, successes/challenges, data sources | Riley & Marija |
 
 ## Quick Start
 
