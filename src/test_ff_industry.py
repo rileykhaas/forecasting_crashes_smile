@@ -41,7 +41,11 @@ def test_sector_crosswalk_covers_eleven_spdrs():
     assert FF49_CODE_TO_SECTOR["Telcm"] == ("Communication Services", "XLC")
     assert len(FF49_TO_ETF) == 11
     assert CLEAN_SECTORS == {
-        "Financials", "Technology", "Health Care", "Energy", "Utilities",
+        "Financials",
+        "Technology",
+        "Health Care",
+        "Energy",
+        "Utilities",
     }
     assert CLEAN_SECTORS <= set(FF49_TO_ETF)
 
