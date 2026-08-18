@@ -9,23 +9,23 @@ tables the analysis consumes. Everything regenerates end-to-end from WRDS via
 committed.
 
 The paper studies S&P 500 firms over January 1996 – December 2022; our build
-extends the panel to the most recent data available (through Aug 2025) — see the
+extends the panel to the most recent data available (through Aug 2025), see the
 Methodology page for how membership is extended past the CRSP vintage.
 
 ## Datasets
 
 | Source | Table | Used for |
 |--------|-------|----------|
-| OptionMetrics | `vsurfd` (volatility surface) | Risk-neutral probabilities and bounds — the core input (the "smile") |
+| OptionMetrics | `vsurfd` (volatility surface) | Risk-neutral probabilities and bounds, the core input (the "smile") |
 | OptionMetrics | `zerocd` (zero-coupon curve) | Risk-free discounting in the bound formulas |
-| OptionMetrics | `secnmd` (security name history) | secid lookup / labels — stocks and the sector ETFs |
-| CRSP | `msf_v2` (monthly stock, CIZ 2.0) | Realized returns and crash events (delisting folded into `mthret` — captures SVB); prices, volume, shares |
+| OptionMetrics | `secnmd` (security name history) | secid lookup / labels, stocks and the sector ETFs |
+| CRSP | `msf_v2` (monthly stock, CIZ 2.0) | Realized returns and crash events (delisting folded into `mthret`, captures SVB); prices, volume, shares |
 | CRSP | `msp500list` (S&P 500 constituents) | Sample selection by month |
-| CRSP | `msix` | S&P 500 index level (`spindx`) — the index "spot" |
+| CRSP | `msix` | S&P 500 index level (`spindx`), the index "spot" |
 | WRDS | `wrdsapps_link_crsp_optionm.opcrsphist` | Joining option data (`secid`) to CRSP returns (`permno`) |
 
 Notes:
-- **Financial firms are retained** — the universe is driven purely by S&P 500
+- **Financial firms are retained**: the universe is driven purely by S&P 500
   membership, with no industry screen (central to the SVB extension).
 - **Option filtering** is largely handled upstream by OptionMetrics' standardized
   Volatility Surface; the paper's Appendix-D filters + flat extrapolation are

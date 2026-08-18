@@ -65,52 +65,49 @@ to match the issue assignee); tasks can be shared, and both members review every
 
 | Issue | Task | Owner |
 |-------|------|-------|
-| [#14](https://github.com/rileykhaas/forecasting_crashes_smile/issues/14) | CRSP: `pull_sp500.py` + `pull_link.py` → resolved secid universe |  |
-| [#15](https://github.com/rileykhaas/forecasting_crashes_smile/issues/15) | CRSP: `realized_returns.py` → `realized_returns.parquet` |  |
-| [#16](https://github.com/rileykhaas/forecasting_crashes_smile/issues/16) | OptionMetrics: `pull_optionmetrics.py` → raw `vsurfd` + `securd` + `zerocd` |  |
-| [#17](https://github.com/rileykhaas/forecasting_crashes_smile/issues/17) | OptionMetrics: `clean_surface.py` + `rates.py` → `clean_surface.parquet` + `rates.parquet` |  |
-| [#18](https://github.com/rileykhaas/forecasting_crashes_smile/issues/18) | Engine A1+A2: `rnd.py` risk-neutral CDF + `crash_prob.py` risk-neutral crash prob |  |
-| [#19](https://github.com/rileykhaas/forecasting_crashes_smile/issues/19) | Engine A3+A4: `utility_correction.py` + `bounds.py` |  |
-| [#20](https://github.com/rileykhaas/forecasting_crashes_smile/issues/20) | Engine A5: `run_pipeline.py` → `results.parquet` + dodo wiring |  |
-| [#21](https://github.com/rileykhaas/forecasting_crashes_smile/issues/21) | Engine tests + doctests (extend `test_schema.py`) |  |
+| [#14](https://github.com/rileykhaas/forecasting_crashes_smile/issues/14) | CRSP: `pull_sp500.py` + `pull_link.py` → resolved secid universe | Riley |
+| [#15](https://github.com/rileykhaas/forecasting_crashes_smile/issues/15) | CRSP: `realized_returns.py` → `realized_returns.parquet` | Marija |
+| [#16](https://github.com/rileykhaas/forecasting_crashes_smile/issues/16) | OptionMetrics: `pull_optionmetrics.py` → raw `vsurfd` + `securd` + `zerocd` | Riley |
+| [#17](https://github.com/rileykhaas/forecasting_crashes_smile/issues/17) | OptionMetrics: `clean_surface.py` + `rates.py` → `clean_surface.parquet` + `rates.parquet` | Riley |
+| [#18](https://github.com/rileykhaas/forecasting_crashes_smile/issues/18) | Engine A1+A2: `rnd.py` risk-neutral CDF + `crash_prob.py` risk-neutral crash prob | Marija |
+| [#19](https://github.com/rileykhaas/forecasting_crashes_smile/issues/19) | Engine A3+A4: `utility_correction.py` + `bounds.py` | Marija |
+| [#20](https://github.com/rileykhaas/forecasting_crashes_smile/issues/20) | Engine A5: `run_pipeline.py` → `results.parquet` + dodo wiring | Marija |
+| [#21](https://github.com/rileykhaas/forecasting_crashes_smile/issues/21) | Engine tests + doctests (extend `test_schema.py`) | Marija |
 
 **M1 — Replication**
 
 | Issue | Task | Owner |
 |-------|------|-------|
-| [#22](https://github.com/rileykhaas/forecasting_crashes_smile/issues/22) | Figure 1 — AAPL & AIG single-name bounds |  |
-| [#23](https://github.com/rileykhaas/forecasting_crashes_smile/issues/23) | Figure 2 — cross-sectional medians + SPX index prob |  |
-| [#24](https://github.com/rileykhaas/forecasting_crashes_smile/issues/24) | Table 1 — summary statistics (lower / P\* / upper / realized) |  |
-| [#25](https://github.com/rileykhaas/forecasting_crashes_smile/issues/25) | Table 2 — regression calibration tests (beta, alpha, R²) |  |
-| [#26](https://github.com/rileykhaas/forecasting_crashes_smile/issues/26) | Figure 6 — out-of-sample R² vs naive benchmark |  |
-| [#33](https://github.com/rileykhaas/forecasting_crashes_smile/issues/33) | EDA product — summary-stats table + figures of the underlying panel |  |
+| [#22](https://github.com/rileykhaas/forecasting_crashes_smile/issues/22) | Figure 1 — AAPL & AIG single-name bounds | Riley |
+| [#23](https://github.com/rileykhaas/forecasting_crashes_smile/issues/23) | Figure 2 — cross-sectional medians + SPX index prob | Riley |
+| [#24](https://github.com/rileykhaas/forecasting_crashes_smile/issues/24) | Table 1 — summary statistics (lower / P\* / upper / realized) | Riley |
+| [#25](https://github.com/rileykhaas/forecasting_crashes_smile/issues/25) | Table 2 — regression calibration tests (beta, alpha, R²) | Riley |
+| [#26](https://github.com/rileykhaas/forecasting_crashes_smile/issues/26) | Figure 6 — out-of-sample R² vs naive benchmark | Riley |
+| [#33](https://github.com/rileykhaas/forecasting_crashes_smile/issues/33) | EDA product — summary-stats table + figures of the underlying panel | Riley |
 
 **M2 — Package (`crashbounds`)**
 
 | Issue | Task | Owner |
 |-------|------|-------|
-| [#27](https://github.com/rileykhaas/forecasting_crashes_smile/issues/27) | Package scaffold + `pyproject.toml` |  |
-| [#28](https://github.com/rileykhaas/forecasting_crashes_smile/issues/28) | Public API wrapping A1–A4 |  |
-| [#29](https://github.com/rileykhaas/forecasting_crashes_smile/issues/29) | Tests + CI + README quickstart |  |
+| [#27](https://github.com/rileykhaas/forecasting_crashes_smile/issues/27) | Package scaffold + `pyproject.toml` | Marija |
+| [#28](https://github.com/rileykhaas/forecasting_crashes_smile/issues/28) | Public API wrapping A1–A4 | Marija |
+| [#29](https://github.com/rileykhaas/forecasting_crashes_smile/issues/29) | Tests + CI + README quickstart | Marija |
 
 **M3 — Extensions & SVB**
 
 | Issue | Task | Owner |
 |-------|------|-------|
-| [#30](https://github.com/rileykhaas/forecasting_crashes_smile/issues/30) | Extend `END_DATE` → 2025-12-31; both re-pull, regenerate |  |
-| [#31](https://github.com/rileykhaas/forecasting_crashes_smile/issues/31) | SVB case study — spike & decide (daily feasibility, presentation) |  |
-| [#34](https://github.com/rileykhaas/forecasting_crashes_smile/issues/34) | Sector ETF extension — all SPDR sector ETF bounds |  |
+| [#30](https://github.com/rileykhaas/forecasting_crashes_smile/issues/30) | Extend `END_DATE` → 2025-12-31; both re-pull, regenerate | Riley & Marija |
+| [#31](https://github.com/rileykhaas/forecasting_crashes_smile/issues/31) | SVB case study — spike & decide (daily feasibility, presentation) | Riley |
+| [#34](https://github.com/rileykhaas/forecasting_crashes_smile/issues/34) | Sector ETF extension — all SPDR sector ETF bounds | Riley |
 
 **M4 — Integration**
 
 | Issue | Task | Owner |
 |-------|------|-------|
-| [#32](https://github.com/rileykhaas/forecasting_crashes_smile/issues/32) | chartbook manifests + LaTeX wiring + full `doit` clean run |  |
-| [#35](https://github.com/rileykhaas/forecasting_crashes_smile/issues/35) | Notebook tour — cleaned data + analysis walkthrough (`docs_src`) |  |
-| [#36](https://github.com/rileykhaas/forecasting_crashes_smile/issues/36) | LaTeX narrative — overview, successes/challenges, data sources |  |
-
-Both team members are expected to understand the whole project — the week-10 oral defense is
-graded individually.
+| [#32](https://github.com/rileykhaas/forecasting_crashes_smile/issues/32) | chartbook manifests + LaTeX wiring + full `doit` clean run | Riley & Marija |
+| [#35](https://github.com/rileykhaas/forecasting_crashes_smile/issues/35) | Notebook tour — cleaned data + analysis walkthrough (`docs_src`) | Riley |
+| [#36](https://github.com/rileykhaas/forecasting_crashes_smile/issues/36) | LaTeX narrative — overview, successes/challenges, data sources | Riley |
 
 ## Quick Start
 
@@ -129,11 +126,22 @@ conda env create -f environment.yml
 conda activate forecasting_crashes_smile
 ```
 
-Finally, run the project tasks:
+This project pulls proprietary data from **WRDS** (OptionMetrics and CRSP), so you need a WRDS
+account. Copy `.env.example` to `.env` and set your `WRDS_USERNAME`:
+```bash
+cp .env.example .env   # then edit .env and set WRDS_USERNAME
+```
+On the first WRDS connection you will be prompted for your password and offered to create a
+`~/.pgpass` file, so later runs authenticate automatically.
+
+Finally, run the whole project end-to-end (pulls, cleaning, the engine, every exhibit, the
+report, the chartbook, and the tests):
 ```bash
 doit
 ```
-And that's it!
+The first run downloads all the data and can take a while; afterwards `doit` only re-runs what
+has changed. Outputs land in `_output/` (figures, tables, the report PDF) and `docs/` (the
+chartbook site).
 
 
 ### Other commands
@@ -145,12 +153,12 @@ You can run the unit test, including doctests, with the following command:
 pytest --doctest-modules
 ```
 
-You can build the documentation with:
+You can (re)build the chartbook documentation site on its own with:
+```bash
+doit build_chartbook_site
 ```
-rm ./src/.pytest_cache/README.md
-jupyter-book build -W ./
-```
-Use `del` instead of rm on Windows
+The site is written to `docs/`; open `docs/index.html` to view it. The full `doit` run
+builds it as well.
 
 
 #### Setting Environment Variables
@@ -186,56 +194,43 @@ ruff format . && ruff check --select I --fix . && ruff check --fix .
 - `ruff format` formats code similar to Black
 - `--select I` targets only import sorting rules (isort-compatible)
 
-### General Directory Structure
+### Repository layout
 
- - The `assets` folder is used for things like hand-drawn figures or other
-   pictures that were not generated from code. These things cannot be easily
-   recreated if they are deleted.
+- **`src/`** — all Python: the WRDS pulls, the cleaning steps, the A1–A5 engine, and the
+  exhibit scripts, each with a co-located `test_*.py`. `src/settings.py` resolves configuration
+  and directory paths; `src/schema.py` is the single source of truth for constants and table
+  schemas.
+- **`dodo.py`** — the [PyDoit](https://pydoit.org/) task graph that runs the whole project
+  end-to-end (it works like a `Makefile`, but in Python). Run everything with `doit` from the
+  repository root.
+- **`_data/`** — cached data: the raw WRDS pulls and the cleaned parquet tables. Generated by
+  the pipeline and **not** tracked in Git; safe to delete and rebuild.
+- **`_output/`** — generated exhibits: `results.parquet`, the figures and tables, the rendered
+  notebook, and the compiled report. Also generated by the pipeline; safe to delete.
+- **`reports/`** — the LaTeX source for the write-up (`report.tex`) and its style files.
+- **`docs_src/`** — chartbook source: a markdown page for each chart and dataframe, plus the
+  project-overview site pages.
+- **`docs/`** — the built chartbook website (produced by `doit build_chartbook_site`).
+- **`data_manual/`** — data that cannot be regenerated from code; this folder *is* tracked in Git.
+- **`assets/`** — static images not generated from code (e.g. hand-drawn figures).
+- **`.env`** — machine-specific settings such as your WRDS username and any custom data paths.
+  Not tracked in Git; copy `.env.example` to `.env` and fill it in.
 
- - The `_output` folder, on the other hand, contains dataframes and figures that are
-   generated from code. The entire folder should be able to be deleted, because
-   the code can be run again, which would again generate all of the contents.
+### Data and output storage
 
- - The `data_manual` is for data that cannot be easily recreated. This data
-   should be version controlled. Anything in the `_data` folder or in
-   the `_output` folder should be able to be recreated by running the code
-   and can safely be deleted.
+- **`_data/`** holds cached data: the raw WRDS pulls and the cleaned parquet tables. It is
+  **not** tracked in Git — every file is recreated by running `doit` (the pull tasks live in
+  `dodo.py`), so the folder can be deleted and rebuilt at any time. The raw OptionMetrics and
+  CRSP data is proprietary and must never be committed.
+- **`_output/`** holds everything generated from code: dataframes, figures, tables, the
+  rendered notebook, the compiled report, and the chartbook site inputs. It, too, is fully
+  reproducible and safe to delete.
+- **`data_manual/`** holds any data that *cannot* be regenerated from code; because it would be
+  costly to lose, it is kept under version control.
 
- - I'm using the `doit` Python module as a task runner. It works like `make` and
-   the associated `Makefile`s. To rerun the code, install `doit`
-   (https://pydoit.org/) and execute the command `doit` from the `src`
-   directory. Note that doit is very flexible and can be used to run code
-   commands from the command prompt, thus making it suitable for projects that
-   use scripts written in multiple different programming languages.
-
- - I'm using the `.env` file as a container for absolute paths that are private
-   to each collaborator in the project. You can also use it for private
-   credentials, if needed. It should not be tracked in Git.
-
-### Data and Output Storage
-
-I'll often use a separate folder for storing data. Any data in the data folder
-can be deleted and recreated by rerunning the PyDoit command (the pulls are in
-the dodo.py file). Any data that cannot be automatically recreated should be
-stored in the "data_manual" folder. Because of the risk of manually-created data
-getting changed or lost, I prefer to keep it under version control if I can.
-Thus, data in the "_data" folder is excluded from Git (see the .gitignore file),
-while the "data_manual" folder is tracked by Git.
-
-Output is stored in the "_output" directory. This includes dataframes, charts, and
-rendered notebooks. When the output is small enough, I'll keep this under
-version control. I like this because I can keep track of how dataframes change as my
-analysis progresses, for example.
-
-Of course, the _data directory and _output directory can be kept elsewhere on the
-machine. To make this easy, I always include the ability to customize these
-locations by defining the path to these directories in environment variables,
-which I intend to be defined in the `.env` file, though they can also simply be
-defined on the command line or elsewhere. The `settings.py` is responsible for
-loading these environment variables and doing some preprocessing on them.
-The `settings.py` file is the entry point for all other scripts to these
-definitions. That is, all code that references these variables and others are
-loaded by importing `config`.
+The locations of `_data/` and `_output/` are configurable through environment variables in
+`.env`. `src/settings.py` loads and preprocesses those variables and exposes them through a
+`config` object, which every script imports rather than hard-coding paths.
 
 ### Naming Conventions
 
