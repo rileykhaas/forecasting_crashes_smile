@@ -17,7 +17,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: .venv
-        key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt', '**/.python-version') }}
+        key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt', '**/.python-version', 'crashbounds/pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-venv-
     - name: Install Python environment
@@ -26,6 +26,7 @@ jobs:
         python -m venv .venv
         source .venv/bin/activate
         pip install -r requirements.txt
+        pip install -e crashbounds/
     - name: Test with pytest
       run: |
         source .venv/bin/activate
