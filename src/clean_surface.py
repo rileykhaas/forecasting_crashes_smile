@@ -19,8 +19,10 @@ at pricing time, exactly as the paper does.
 
 Spot sourcing: constituents get CRSP ``|prc|`` via the #14 secid<->permno link;
 the S&P 500 index (SPX_SECID) gets the CRSP S&P 500 level (``spindx`` from the
-CRSP index file). The extension ETFs are out of the paper's scope and are not
-spot-matched here (handled with the sector-ETF extension, #34).
+CRSP index file); the extension sector ETFs (#34) get CRSP ``|prc|`` for their
+own permno via ``etf_link`` (their permnos are force-pulled into the CRSP file by
+``pull_CRSP_stock.sector_etf_permnos``). Passing no ``etf_link`` reproduces the
+paper's constituents-plus-index scope exactly.
 
 Output columns are defined by schema.SCHEMAS["clean_surface"].
 """
@@ -36,11 +38,18 @@ import schema
 DATA_DIR = Path(config("DATA_DIR"))
 
 
-def build_spot_by_month(universe, crsp_monthly, crsp_index):
+def build_spot_by_month(universe, crsp_monthly, crsp_index, etf_link=None):
     """Assemble month-end CRSP spot per (secid, month) for names + the index.
 
     Keyed on a monthly period rather than the exact date so the surface's
     NYSE month-end and CRSP's month-end always line up.
+
+    ``etf_link`` (sector-ETF extension, #34): an optional [secid, permno] map for
+    the extension ETFs. Given it, each ETF gets a CRSP ``|prc|`` spot for every
+    month it traded (the same |prc| source and moneyness = strike/spot convention
+    as the constituents), so its surface survives the spot inner-join in
+    ``clean_surface``. Left None, the output is constituents + index only (the
+    paper's scope).
 
     Returns a DataFrame with columns [secid, ym (Period[M]), spot_price].
     """
@@ -71,10 +80,24 @@ def build_spot_by_month(universe, crsp_monthly, crsp_index):
     )
     spx_spot["secid"] = SPX_SECID
 
-    spot = pd.concat(
-        [cons_spot, spx_spot[["secid", "ym", "spot_price"]]], ignore_index=True
-    )
-    return spot
+    parts = [cons_spot, spx_spot[["secid", "ym", "spot_price"]]]
+
+    # Extension ETFs: CRSP |prc| for each ETF's permno, every month it traded.
+    if etf_link is not None and len(etf_link) > 0:
+        el = etf_link.dropna(subset=["permno"]).copy()
+        el["secid"] = el["secid"].astype("int64")
+        el["permno"] = el["permno"].astype("int64")
+        el = el.drop_duplicates(["secid", "permno"])
+        etf_spot = (
+            crsp[["permno", "ym", "altprc"]]
+            .merge(el[["secid", "permno"]], on="permno", how="inner")
+            .rename(columns={"altprc": "spot_price"})[["secid", "ym", "spot_price"]]
+            .dropna(subset=["spot_price"])
+            .drop_duplicates(["secid", "ym"])
+        )
+        parts.append(etf_spot)
+
+    return pd.concat(parts, ignore_index=True)
 
 
 def clean_surface(raw_surface, spot_by_month):
@@ -145,14 +168,22 @@ def load_clean_surface(data_dir=DATA_DIR):
 
 
 if __name__ == "__main__":
-    from pull_optionmetrics import load_vol_surface
+    from pull_optionmetrics import load_option_pull_secids, load_vol_surface
     from pull_CRSP_stock import load_CRSP_monthly_file, load_CRSP_index_files
+    from pull_link import load_crsp_optionm_link
     from sp500_secid_universe import load_sp500_secid_universe
+
+    # Extension ETFs (#34): [secid, permno] map for the sector_etf secids.
+    manifest = load_option_pull_secids()
+    etf_secids = set(manifest.loc[manifest["source"] == "sector_etf", "secid"].astype(int))
+    link = load_crsp_optionm_link()
+    etf_link = link.loc[link["secid"].isin(etf_secids), ["secid", "permno"]].drop_duplicates()
 
     spot = build_spot_by_month(
         load_sp500_secid_universe(),
         load_CRSP_monthly_file(),
         load_CRSP_index_files(),
+        etf_link=etf_link,
     )
     df = clean_surface(load_vol_surface(), spot)
     schema.validate_schema(df, "clean_surface")

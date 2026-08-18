@@ -86,14 +86,25 @@ def task_config():
 
 
 def task_pull_crsp_stock():
-    """Pull the CRSP monthly stock panel from WRDS."""
+    """Pull the CRSP monthly stock panel from WRDS.
+
+    Also force-includes the extension sector-ETF permnos (#34), which are not
+    ``securitytype='EQTY'``; their secids come from the OptionMetrics pull manifest
+    and map to permnos via the CRSP-OptionMetrics link, so this pull now depends on
+    those two artifacts.
+    """
     return {
         "actions": [
             "python ./src/settings.py",
             "python ./src/pull_CRSP_stock.py",
         ],
         "targets": [DATA_DIR / "CRSP_monthly_stock.parquet"],
-        "file_dep": ["./src/settings.py", "./src/pull_CRSP_stock.py"],
+        "file_dep": [
+            "./src/settings.py",
+            "./src/pull_CRSP_stock.py",
+            DATA_DIR / "crsp_optionm_link.parquet",
+            DATA_DIR / "optionm_pull_secids.parquet",
+        ],
         "clean": [],
     }
 
@@ -215,7 +226,8 @@ def task_clean_surface():
     """Filter the OptionMetrics surface into clean_surface.parquet (Slice 1).
 
     Applies the paper's Appendix-D filters and attaches CRSP spot (constituents
-    via the #14 link, the S&P 500 index via spindx).
+    via the #14 link, the S&P 500 index via spindx, and the extension sector ETFs
+    via their own permno, #34).
     """
     return {
         "actions": ["python ./src/clean_surface.py"],
@@ -224,10 +236,14 @@ def task_clean_surface():
             "./src/clean_surface.py",
             "./src/schema.py",
             "./src/sp500_secid_universe.py",
+            "./src/pull_link.py",
+            "./src/pull_optionmetrics.py",
             DATA_DIR / "optionm_vol_surface.parquet",
             DATA_DIR / "sp500_secid_universe.parquet",
             DATA_DIR / "CRSP_monthly_stock.parquet",
             DATA_DIR / "CRSP_MSIX.parquet",
+            DATA_DIR / "crsp_optionm_link.parquet",
+            DATA_DIR / "optionm_pull_secids.parquet",
         ],
         "clean": [],
     }
@@ -371,6 +387,52 @@ def task_eda():
     }
 
 
+def task_etf_bounds():
+    """X: Sector-ETF crash-probability bounds vs. the S&P 500 (extension #34)."""
+    return {
+        "actions": ["python ./src/exhibit_etf_bounds.py"],
+        "targets": [
+            OUTPUT_DIR / "etf_bounds.tex", OUTPUT_DIR / "etf_bounds.csv",
+            OUTPUT_DIR / "etf_bounds_ext.tex", OUTPUT_DIR / "etf_bounds_ext.csv",
+            OUTPUT_DIR / "fig_etf_sector_bounds.png",
+            OUTPUT_DIR / "fig_etf_sector_bounds_ext.png",
+        ],
+        "file_dep": [
+            "./src/exhibit_etf_bounds.py",
+            "./src/schema.py",
+            OUTPUT_DIR / "results.parquet",
+            DATA_DIR / "optionm_pull_secids.parquet",
+        ],
+        "clean": True,
+    }
+
+
+def task_industry_compare():
+    """X: Industry proxy (avg. of constituents) vs. direct sector-ETF bound (#34)."""
+    return {
+        "actions": ["python ./src/exhibit_industry_compare.py"],
+        "targets": [
+            OUTPUT_DIR / "industry_tightness.tex", OUTPUT_DIR / "industry_tightness.csv",
+            OUTPUT_DIR / "industry_tightness_ext.tex", OUTPUT_DIR / "industry_tightness_ext.csv",
+            OUTPUT_DIR / "fig_industry_compare.png",
+            OUTPUT_DIR / "fig_industry_compare_ext.png",
+        ],
+        "file_dep": [
+            "./src/exhibit_industry_compare.py",
+            "./src/ff_industry.py",
+            "./src/exhibit_etf_bounds.py",
+            "./src/sp500_secid_universe.py",
+            "./src/pull_CRSP_stock.py",
+            "./src/schema.py",
+            OUTPUT_DIR / "results.parquet",
+            DATA_DIR / "sp500_secid_universe.parquet",
+            DATA_DIR / "CRSP_monthly_stock.parquet",
+            DATA_DIR / "optionm_pull_secids.parquet",
+        ],
+        "clean": True,
+    }
+
+
 notebook_tasks = {
     "01_data_tour.ipynb.py": {
         "path": "./src/01_data_tour.ipynb.py",
@@ -447,6 +509,10 @@ def task_compile_latex_docs():
             OUTPUT_DIR / "fig6_oos_r2_ext.png",
             OUTPUT_DIR / "eda_coverage.tex",
             OUTPUT_DIR / "eda_panel.png",
+            OUTPUT_DIR / "etf_bounds.tex",
+            OUTPUT_DIR / "fig_etf_sector_bounds.png",
+            OUTPUT_DIR / "industry_tightness.tex",
+            OUTPUT_DIR / "fig_industry_compare.png",
         ],
         "clean": True,
     }

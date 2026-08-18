@@ -104,6 +104,30 @@ def test_build_spot_names_and_index():
     assert by[SPX_SECID] == 3200.0
 
 
+def test_build_spot_includes_etfs(): # sector-ETF extension (#34)
+    """With an etf_link, each ETF gets a CRSP |prc| spot for the months it traded,
+    alongside constituents and the index."""
+    universe = pd.DataFrame(
+        {"date": [pd.Timestamp("2020-01-31")], "permno": [111], "secid": [5]}
+    )
+    crsp = pd.DataFrame(
+        {
+            "permno": [111, 999],  # 111 = constituent, 999 = an ETF permno
+            "date": [pd.Timestamp("2020-01-31")] * 2,
+            "altprc": [50.0, 42.0],
+        }
+    )
+    idx = pd.DataFrame({"caldt": [pd.Timestamp("2020-01-31")], "spindx": [3200.0]})
+    etf_link = pd.DataFrame({"secid": [110012], "permno": [999]})  # XLF-like
+    spot = build_spot_by_month(universe, crsp, idx, etf_link=etf_link)
+    by = dict(zip(spot["secid"], spot["spot_price"]))
+    assert by[5] == 50.0          # constituent
+    assert by[SPX_SECID] == 3200.0  # index
+    assert by[110012] == 42.0     # ETF, via its own permno
+    # Without an etf_link the ETF is absent (paper's constituents+index scope).
+    assert 110012 not in set(build_spot_by_month(universe, crsp, idx)["secid"])
+
+
 def test_schema_conforms():
     out = clean_surface(_raw(secid=1), _spot(1))
     assert schema.validate_schema(out, "clean_surface")

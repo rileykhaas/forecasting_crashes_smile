@@ -430,10 +430,118 @@ exactly where the method needs them, and that crashes are rare but non-trivial.}
 %======================================================================
 \section{Extensions}
 %======================================================================
-\paragraph{Sector crash series.} Applying the bound to the eleven Select Sector
-SPDR ETFs (plus KRE) yields a \emph{direct} per-sector crash-probability series,
-in contrast to the paper's average-of-constituents proxy.
-\pending{Per-sector crash-probability series}
+\subsection{Sector crash series}
+Applying the bound to the eleven Select Sector SPDR ETFs (plus KRE, regional banks)
+yields a \emph{direct} per-sector crash-probability series, in contrast to the
+paper's average-of-constituents proxy. This is not a weakening of the theory but a
+clean test of it: the comonotonicity assumption that makes the lower bound tight is
+far more plausible for a diversified sector ETF than for a single name, so the bound
+should bind \emph{more} tightly here. And an average of individual crash
+probabilities is not the probability the sector crashes --- the ETF surface gives the
+sector's crash probability directly. The ETFs run through exactly the same engine as
+the stocks (they are spot-matched in cleaning and priced in the pipeline once their
+permnos are pulled), so no new estimation is introduced.
+
+Figure~\ref{fig:etf} plots each sector's direct lower-bound one-month 20\% crash
+probability against the S\&P~500's own (the $i=m$ benchmark). The measure behaves
+exactly as economic intuition demands: technology (XLK) spikes through the 2000--02
+dot-com unwind, financials (XLF) and regional banks (KRE) in 2008--09, energy (XLE)
+in the 2014--16 oil collapse, while defensive sectors (staples XLP, utilities XLU,
+health care XLV) stay quiet and below the index. Table~\ref{tab:etf} states the
+benchmark numerically: for the diversified broad sectors the mean lower bound sits
+close to the realized crash frequency (financials $0.079$ vs.\ $0.073$; the index
+itself $0.055$ vs.\ $0.068$), while the risk-neutral probability again runs two to
+three times too high --- the paper's ``crying wolf'' result, now confirmed at the
+sector level. The bound is more conservative for the less-diversified,
+higher-beta sleeves (energy, technology, and especially regional banks), consistent
+with comonotonicity binding tightest exactly where diversification is greatest.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{\PathToOutput/fig_etf_sector_bounds.png}
+\caption{Direct sector-ETF lower-bound probability of a 20\% one-month crash (blue),
+each against the S\&P~500 index's own crash probability (grey, the $i=m$ bound),
+1996--2022. Each sector's option surface prices its \emph{own} crash risk directly,
+rather than averaging its constituents: technology leads in 2000--02, financials and
+regional banks in 2008--09, energy in 2014--16, while defensive sectors stay below
+the index throughout. The takeaway: the theory-based measure produces an economically
+coherent, sector-specific crash gauge, tightest where the market-comonotonicity
+assumption is most plausible.}
+\label{fig:etf}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Sector-ETF crash-probability bounds vs.\ the realized frequency (12-month
+horizon, $q=0.80$, 1996--2022). $\overline{P^L}$, $\overline{P^*}$, $\overline{P^U}$
+are the mean lower bound, risk-neutral probability, and upper bound; ``Realized'' is
+the realized frequency of a 20\% crash; $N$ counts the months with an observed
+outcome (shorter for the later-launched ETFs, XLRE and XLC). The takeaway: for the
+diversified broad sectors the lower bound hugs the realized frequency while the
+risk-neutral overstates it two- to three-fold, reproducing the paper's core finding
+directly at the sector level; the bound is more conservative for the concentrated,
+higher-beta sleeves.}
+\label{tab:etf}
+\input{\PathToOutput/etf_bounds.tex}
+\end{table}
+
+\subsection{The gap our measure fills: proxy vs.\ direct}
+The paper measures an industry's crash risk as the equal-weighted average of its
+constituents' lower bounds (its Figure~10). But an average of individual crash
+probabilities is \emph{not} the probability the sector crashes: a diversified sector
+can be calm while its members are each risky. Our sector-ETF surface prices the
+sector's crash probability \emph{directly}. Figure~\ref{fig:industrycompare} puts the
+two on the same axes for the six Fama-French industries with a clean Select Sector
+SPDR counterpart, assigning each S\&P~500 constituent to an FF12 industry from its
+CRSP SIC code.
+
+The pattern is consistent: the proxy (orange) sits \emph{above} the direct bound
+(blue) in every sector and at almost every date --- averaging risky names
+systematically overstates the diversified sector's crash probability.
+Table~\ref{tab:industry} measures each against the sector's realized crash frequency.
+The proxy overstates it in \emph{every} sector (the Proxy$-$Real.\ column is positive
+throughout, by up to nine points), confirming that an average of individually risky
+names is not the diversified sector's crash probability. The direct measure is far
+better calibrated for the broad, well-diversified sectors --- essentially on top of
+realized for financials ($+0.007$) and manufacturing ($+0.000$), and closest in health
+care, where individually risky biotech names keep the proxy elevated at $0.11$ against
+a direct bound a quarter of that. For the higher-beta, less internally diversified
+sleeves (energy, technology, utilities) the direct bound sits \emph{below} the
+realized frequency: as a \emph{lower} bound it stays conservative where a sector's
+crashes are driven by idiosyncratic sector shocks (oil, rates, the tech cycle) rather
+than the market --- exactly where the comonotonicity that makes the bound tight is
+least applicable. In every case, though, the direct measure is the sector's own crash
+probability; the proxy is not.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{\PathToOutput/fig_industry_compare.png}
+\caption{The paper's average-of-constituents proxy (orange) vs.\ our direct
+sector-ETF lower bound (blue), one-month 20\% crash probability, 1996--2022, for the
+six Fama-French industries with a clean SPDR sector counterpart. The proxy lies above
+the direct measure in every panel: averaging individually risky names overstates the
+diversified sector's crash risk. Health care is the clearest case --- a persistently
+elevated proxy against a near-zero direct bound. The takeaway: an average of
+constituent crash probabilities is not the sector's crash probability, and the ETF
+surface supplies the latter directly.}
+\label{fig:industrycompare}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Proxy vs.\ direct sector-ETF lower bound, and each measure's distance from
+the realized crash frequency (12-month horizon, $q=0.80$, 1996--2022). ``Proxy'' is
+the mean equal-weighted constituent lower bound (the paper's Figure-10 measure);
+``Direct'' is the sector ETF's own mean lower bound; ``Realized'' is the sector's
+realized 20\% crash frequency; ``Proxy$-$Real.'' and ``Direct$-$Real.'' are each
+measure's gap to it (its tightness). The takeaway: the proxy overstates the realized
+frequency in every sector, while the direct measure tracks it for the broad
+diversified sectors and stays conservative (below) for the higher-beta ones.}
+\label{tab:industry}
+\resizebox{\textwidth}{!}{\input{\PathToOutput/industry_tightness.tex}}
+\end{table}
 
 \paragraph{Silicon Valley Bank case study.} We read one event at three levels ---
 the failed name (SIVB), the regional-bank ETF (KRE), and the financial sector
@@ -457,5 +565,20 @@ differences --- each of which we resolved or documented explicitly. The low
 regression $R^2$ (a few percent) is expected: crashes are rare binary events, and
 the meaningful comparison is the lower bound against the risk-neutral probability
 on the same sample, where the bound wins.
+
+Our sector-ETF extension carries the method beyond the paper and sharpens its
+economic point. Pricing the eleven Select Sector SPDR surfaces (plus KRE) directly
+gives an honest per-sector crash gauge that spikes exactly when it should ---
+technology in 2000--02, financials and regional banks in 2008--09, energy in
+2014--16 --- and confirms the ``crying wolf'' result at the sector level, with the
+risk-neutral probability running two- to three-fold above realized while the lower
+bound stays close. The comparison in Table~\ref{tab:industry} is the clearest payoff:
+the paper's average-of-constituents proxy overstates the realized sector crash
+frequency in \emph{every} sector (by up to nine percentage points), because an
+average of individually risky names is not the probability the diversified sector
+crashes. Our direct measure supplies that probability --- landing on top of the
+realized frequency for the broad diversified sectors (financials $0.079$ vs.\ $0.073$;
+manufacturing $0.067$ vs.\ $0.066$) and staying conservative, as a lower bound should,
+for the higher-beta sleeves whose crashes are idiosyncratic rather than market-driven.
 
 \end{document}
