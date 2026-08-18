@@ -226,7 +226,7 @@ provider_links = ["https://wrds-www.wharton.upenn.edu/"]
 access_types = ["Subscription"]
 license = "Derived from OptionMetrics / CRSP via WRDS, subscription required; not redistributable."
 restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit industry_compare`."
-pull_method = "exhibit_industry_compare.py: FF12 industry per constituent (ff_industry.py from CRSP siccd); proxy = mean constituent lower bound per industry; direct = matched SPDR ETF bound"
+pull_method = "exhibit_industry_compare.py: FF49 industry per constituent (ff_industry.py from CRSP siccd), rolled up to its Select Sector SPDR; proxy = mean constituent lower bound per sector; direct = sector ETF bound; one-year 20% crash"
 tags = ["sector ETF", "Fama-French", "proxy", "direct measure", "comonotonicity", "extension"]
 path = "./_output/industry_tightness.parquet"
 docs_path = "./docs_src/dataframes/industry_tightness.md"
@@ -349,7 +349,7 @@ docs_path = "./docs_src/charts/fig_etf_sector_bounds.md"
 
 [charts.fig_industry_compare]
 name = "Industry Proxy vs. Direct Sector-ETF Bound"
-description = "The paper's average-of-constituents proxy vs. our direct sector-ETF bound, for the six matched Fama-French industries, extended sample through 2025."
+description = "The paper's average-of-constituents FF49 proxy vs. our direct sector-ETF bound, for all eleven Select Sector SPDR sectors, one-year 20% crash, extended sample through 2025."
 dataframe = "results"
 tags = ["Fama-French", "proxy", "sector ETF", "extension"]
 frequency = "Monthly"
