@@ -488,43 +488,55 @@ higher-beta sleeves.}
 
 \subsection{The gap our measure fills: proxy vs.\ direct}
 The paper measures an industry's crash risk as the equal-weighted average of its
-constituents' lower bounds (its Figure~10). But an average of individual crash
-probabilities is \emph{not} the probability the sector crashes: a diversified sector
-can be calm while its members are each risky. Our sector-ETF surface prices the
-sector's crash probability \emph{directly}. Figure~\ref{fig:industrycompare} puts the
-two on the same axes for the six Fama-French industries with a clean Select Sector
-SPDR counterpart, assigning each S\&P~500 constituent to an FF12 industry from its
-CRSP SIC code.
+constituents' lower bounds, on the Fama--French 49-industry classification (its
+Figure~10). But an average of individual crash probabilities is \emph{not} the
+probability the sector crashes: a diversified sector can be calm while its members are
+each risky. Our sector-ETF surface prices the sector's crash probability
+\emph{directly}. Figure~\ref{fig:industrycompare} puts the two on the same axes for
+\emph{all eleven} Select Sector SPDR sectors, using the paper's Figure-10 horizon (the
+one-year probability of a 20\% crash). We reproduce the paper's FF49 assignment ---
+each S\&P~500 constituent gets its FF49 industry from its CRSP SIC code --- and roll
+the FF49 industries up to the SPDR sector they compose. Five sectors map cleanly
+(financials, technology, health care, energy, utilities); the other six, marked with an
+asterisk, are best-fit approximations because FF49's manufacturing and consumer
+industries straddle the GICS sector lines. One deliberate refinement: FF49 files REITs
+under ``Trading'', but they are the GICS Real Estate sector and the bulk of XLRE, so we
+route them to Real Estate (which also de-contaminates the post-2016 financials sleeve).
 
 The pattern is consistent: the proxy (orange) sits \emph{above} the direct bound
 (blue) in every sector and at almost every date --- averaging risky names
 systematically overstates the diversified sector's crash probability.
 Table~\ref{tab:industry} measures each against the sector's realized crash frequency.
-The proxy overstates it in \emph{every} sector (the Proxy$-$Real.\ column is positive
-throughout, by up to nine points), confirming that an average of individually risky
-names is not the diversified sector's crash probability. The direct measure is far
-better calibrated for the broad, well-diversified sectors --- essentially on top of
-realized for financials ($+0.007$) and manufacturing ($+0.000$), and closest in health
-care, where individually risky biotech names keep the proxy elevated at $0.11$ against
-a direct bound a quarter of that. For the higher-beta, less internally diversified
-sleeves (energy, technology, utilities) the direct bound sits \emph{below} the
-realized frequency: as a \emph{lower} bound it stays conservative where a sector's
-crashes are driven by idiosyncratic sector shocks (oil, rates, the tech cycle) rather
-than the market --- exactly where the comonotonicity that makes the bound tight is
-least applicable. In every case, though, the direct measure is the sector's own crash
-probability; the proxy is not.
+The proxy overstates it in every sector but one (the Proxy$-$Real.\ column is positive
+throughout, by up to nine or ten points), confirming that an average of individually
+risky names is not the diversified sector's crash probability. The direct measure is
+far better calibrated for the broad, well-diversified sectors --- essentially on top of
+realized for financials ($+0.007$) and industrials ($+0.000$), and starkest in health
+care and real estate, where individually risky biotech names and single REITs keep the
+proxy above $0.11$ against a direct bound less than half that. For the higher-beta,
+less internally diversified sleeves (energy, technology, utilities) the direct bound
+sits \emph{below} the realized frequency: as a \emph{lower} bound it stays conservative
+where a sector's crashes are driven by idiosyncratic sector shocks (oil, rates, the
+tech cycle) rather than the market --- exactly where the comonotonicity that makes the
+bound tight is least applicable. The lone exception is communication services, whose
+XLC realized column is inflated by a short, crash-heavy post-2018 sample (the sector
+ETF launched in 2018, as did XLRE); read those two realized figures with that caveat.
+In every case, though, the direct measure is the sector's own crash probability; the
+proxy is not.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{\PathToOutput/fig_industry_compare.png}
 \caption{The paper's average-of-constituents proxy (orange) vs.\ our direct
-sector-ETF lower bound (blue), one-month 20\% crash probability, 1996--2022, for the
-six Fama-French industries with a clean SPDR sector counterpart. The proxy lies above
-the direct measure in every panel: averaging individually risky names overstates the
-diversified sector's crash risk. Health care is the clearest case --- a persistently
-elevated proxy against a near-zero direct bound. The takeaway: an average of
-constituent crash probabilities is not the sector's crash probability, and the ETF
-surface supplies the latter directly.}
+sector-ETF lower bound (blue), one-year 20\% crash probability, 1996--2022, for all
+eleven Select Sector SPDR sectors. FF49 industries are rolled up to their SPDR sector;
+an asterisk marks the six best-fit (non-clean) mappings. The proxy lies above the
+direct measure in every panel: averaging individually risky names overstates the
+diversified sector's crash risk. Health care and real estate are the clearest cases ---
+a persistently elevated proxy against a much lower direct bound. XLC and XLRE launched
+in 2018, so their direct series are shorter. The takeaway: an average of constituent
+crash probabilities is not the sector's crash probability, and the ETF surface supplies
+the latter directly.}
 \label{fig:industrycompare}
 \end{figure}
 
@@ -532,13 +544,15 @@ surface supplies the latter directly.}
 \centering
 \small
 \caption{Proxy vs.\ direct sector-ETF lower bound, and each measure's distance from
-the realized crash frequency (12-month horizon, $q=0.80$, 1996--2022). ``Proxy'' is
-the mean equal-weighted constituent lower bound (the paper's Figure-10 measure);
-``Direct'' is the sector ETF's own mean lower bound; ``Realized'' is the sector's
-realized 20\% crash frequency; ``Proxy$-$Real.'' and ``Direct$-$Real.'' are each
-measure's gap to it (its tightness). The takeaway: the proxy overstates the realized
-frequency in every sector, while the direct measure tracks it for the broad
-diversified sectors and stays conservative (below) for the higher-beta ones.}
+the realized crash frequency (one-year horizon, $q=0.80$, 1996--2022), for all eleven
+SPDR sectors. ``Proxy'' is the mean equal-weighted constituent lower bound (the paper's
+Figure-10 FF49 measure); ``Direct'' is the sector ETF's own mean lower bound;
+``Realized'' is the sector's realized 20\% crash frequency; ``Proxy$-$Real.'' and
+``Direct$-$Real.'' are each measure's gap to it (its tightness). An asterisk marks the
+six sectors whose FF49$\to$GICS mapping is a best-fit approximation. The takeaway: the
+proxy overstates the realized frequency in every sector (bar the short-sample XLC),
+while the direct measure tracks it for the broad diversified sectors and stays
+conservative (below) for the higher-beta ones.}
 \label{tab:industry}
 \resizebox{\textwidth}{!}{\input{\PathToOutput/industry_tightness.tex}}
 \end{table}

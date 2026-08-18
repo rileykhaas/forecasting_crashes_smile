@@ -73,9 +73,11 @@ Modeling and data decisions we made (following Appendix D unless noted):
   priced by the unchanged engine; they never enter the replication cross-section, which
   inner-joins to the S&P 500 constituent universe (so Tables 1–2 stay exactly the
   paper's). A regression test pins that exclusion.
-- **FF12 industries from CRSP SIC**: the industry proxy assigns each constituent a
-  Fama–French 12-industry code from the modal CRSP SIC, matched to the six SPDR sectors
-  with a clean correspondence.
+- **FF49 industries from CRSP SIC**: the industry proxy assigns each constituent a
+  Fama–French 49-industry code from the modal CRSP SIC (the paper's Figure-10
+  classification), then rolls the FF49 industries up to all eleven Select Sector SPDR
+  sectors. Five map cleanly; the other six are best-fit approximations. REITs, which
+  FF49 files under "Trading", are routed to Real Estate to match XLRE.
 - **SVB is daily and self-contained**: a separate daily pull (surface + OptionMetrics
   `secprd` spot + zero curve) for four securities over Feb–Mar 2023, priced by the same
   engine; it does not touch the monthly pipeline. SIVB's surface ends at its 9-March
