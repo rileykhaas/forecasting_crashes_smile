@@ -48,9 +48,17 @@ FIG_TITLE = "Industry Proxy (avg. of constituents) vs. Direct Sector-ETF Bound"
 # Stable display order for the eleven Select Sector SPDR sectors: the five cleanly
 # mapped sectors first, then the six best-fit ones.
 SECTOR_ORDER = [
-    "Financials", "Technology", "Health Care", "Energy", "Utilities",
-    "Consumer Discretionary", "Consumer Staples", "Industrials", "Materials",
-    "Communication Services", "Real Estate",
+    "Financials",
+    "Technology",
+    "Health Care",
+    "Energy",
+    "Utilities",
+    "Consumer Discretionary",
+    "Consumer Staples",
+    "Industrials",
+    "Materials",
+    "Communication Services",
+    "Real Estate",
 ]
 
 C_PROXY = "#e0873a"  # orange -- the paper's average-of-constituents proxy
@@ -258,7 +266,9 @@ def build_figure_compare(
 
     axes[0][0].legend(frameon=False, fontsize=8, loc="upper right")
     fig.suptitle(title, fontsize=13, y=0.985)
-    fig.supylabel("Lower-bound probability of a 20% crash (1-year)", fontsize=10, x=0.012)
+    fig.supylabel(
+        "Lower-bound probability of a 20% crash (1-year)", fontsize=10, x=0.012
+    )
     return fig
 
 

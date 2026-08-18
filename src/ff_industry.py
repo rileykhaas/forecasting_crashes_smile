@@ -496,13 +496,30 @@ FF49_TO_ETF = {
     "Energy": ("XLE", ["Oil", "Coal"]),
     "Utilities": ("XLU", ["Util"]),
     "Real Estate": ("XLRE", ["RlEst"]),  # + REITs, via the SIC carve-out below
-    "Consumer Discretionary": ("XLY", ["Autos", "Toys", "Clths", "Txtls", "Rtail",
-                                       "Meals", "PerSv", "Whlsl"]),
+    "Consumer Discretionary": (
+        "XLY",
+        ["Autos", "Toys", "Clths", "Txtls", "Rtail", "Meals", "PerSv", "Whlsl"],
+    ),
     "Consumer Staples": ("XLP", ["Food", "Soda", "Beer", "Smoke", "Agric", "Hshld"]),
-    "Industrials": ("XLI", ["Mach", "ElcEq", "Aero", "Ships", "Guns", "Cnstr", "FabPr",
-                            "Trans", "BusSv", "LabEq"]),
-    "Materials": ("XLB", ["Chems", "Steel", "Gold", "Mines", "Paper", "Boxes", "BldMt",
-                          "Rubbr"]),
+    "Industrials": (
+        "XLI",
+        [
+            "Mach",
+            "ElcEq",
+            "Aero",
+            "Ships",
+            "Guns",
+            "Cnstr",
+            "FabPr",
+            "Trans",
+            "BusSv",
+            "LabEq",
+        ],
+    ),
+    "Materials": (
+        "XLB",
+        ["Chems", "Steel", "Gold", "Mines", "Paper", "Boxes", "BldMt", "Rubbr"],
+    ),
     "Communication Services": ("XLC", ["Telcm", "Fun", "Books"]),
 }
 # The five sectors whose FF49 composition is unambiguous (used to flag the rest).
