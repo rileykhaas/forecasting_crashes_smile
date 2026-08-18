@@ -484,6 +484,10 @@ notebook_tasks = {
         "file_dep": [
             DATA_DIR / "clean_surface.parquet",
             OUTPUT_DIR / "results.parquet",
+            # the SVB extension highlight computed live at the end of the tour
+            DATA_DIR / "svb_daily_surface.parquet",
+            DATA_DIR / "svb_daily_spot.parquet",
+            DATA_DIR / "svb_daily_zero.parquet",
         ],
         "targets": [],
     },
