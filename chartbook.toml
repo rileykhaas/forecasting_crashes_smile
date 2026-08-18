@@ -203,6 +203,34 @@ tags = ["EDA", "coverage", "summary statistics", "option surface", "underlying d
 path = "./_output/eda_coverage.csv"
 docs_path = "./docs_src/dataframes/eda_coverage.md"
 
+[dataframes.etf_bounds]
+name = "Sector-ETF Crash Bounds vs. Realized (extension #34)"
+description = "Per Select Sector SPDR ETF (11 sectors + KRE) and the S&P 500 index: the mean lower bound, risk-neutral probability, and upper bound against the realized 20% crash frequency, at the 12-month horizon. An original extension applying the paper's crash-probability machinery directly to sector-ETF option surfaces — the direct measure, versus the paper's average-of-constituents proxy."
+sources = ["Derived (exhibit_etf_bounds.py from results.parquet)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit etf_bounds`."
+pull_method = "exhibit_etf_bounds.py: select the sector_etf secids (+ SPX) from results.parquet, mean bounds and realized crash frequency per ETF at q=0.80, horizon=12"
+tags = ["sector ETF", "SPDR", "crash bounds", "extension", "comonotonicity", "KRE"]
+path = "./_output/etf_bounds.csv"
+docs_path = "./docs_src/dataframes/etf_bounds.md"
+
+[dataframes.industry_tightness]
+name = "Industry Proxy vs. Direct Sector Bound (extension #34)"
+description = "For each Fama-French industry with a clean Select Sector SPDR counterpart: the mean proxy lower bound (equal-weighted average of constituent bounds, the paper's Figure-10 measure) vs. the direct sector-ETF lower bound vs. the realized crash frequency, at the 12-month horizon. Quantifies the 'tightness' gap — the proxy overstates the diversified sector's crash risk, while the direct measure hugs realized."
+sources = ["Derived (exhibit_industry_compare.py from results.parquet + CRSP SIC)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from OptionMetrics / CRSP via WRDS — subscription required; not redistributable."
+restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit industry_compare`."
+pull_method = "exhibit_industry_compare.py: FF12 industry per constituent (ff_industry.py from CRSP siccd); proxy = mean constituent lower bound per industry; direct = matched SPDR ETF bound"
+tags = ["sector ETF", "Fama-French", "proxy", "direct measure", "comonotonicity", "extension"]
+path = "./_output/industry_tightness.csv"
+docs_path = "./docs_src/dataframes/industry_tightness.md"
+
 
 [charts]
 
@@ -233,4 +261,18 @@ description = "Our own exploratory 2x2 view of the raw inputs (issue #33), over 
 dataframe = "clean_surface"
 path = "./_output/eda_panel.png"
 docs_path = "./docs_src/charts/eda_panel.md"
+
+[charts.fig_etf_sector_bounds]
+name = "Sector-ETF Crash Probabilities vs. the S&P 500 (extension #34)"
+description = "Original extension (issue #34): each Select Sector SPDR ETF's direct lower-bound one-month 20% crash probability over time, with the S&P 500 index's own crash probability (the i=m bound) overlaid, 1996-2022. The direct sector measure, in contrast to the paper's average-of-constituents proxy. Technology spikes in 2000-02, financials and regional banks (KRE) in 2008-09, energy in 2014-16; defensive sectors stay below the index."
+dataframe = "results"
+path = "./_output/fig_etf_sector_bounds.png"
+docs_path = "./docs_src/charts/fig_etf_sector_bounds.md"
+
+[charts.fig_industry_compare]
+name = "Industry Proxy vs. Direct Sector-ETF Bound (extension #34)"
+description = "The paper's average-of-constituents proxy (orange) vs. our direct sector-ETF lower bound (blue), one-month 20% crash probability, 1996-2022, for the six Fama-French industries with a clean SPDR counterpart. The proxy lies above the direct measure in every panel — averaging individually risky names overstates the diversified sector's crash risk. Health care is the clearest case: a persistently elevated proxy against a near-zero direct bound."
+dataframe = "results"
+path = "./_output/fig_industry_compare.png"
+docs_path = "./docs_src/charts/fig_industry_compare.md"
 
