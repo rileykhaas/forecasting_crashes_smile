@@ -543,10 +543,68 @@ diversified sectors and stays conservative (below) for the higher-beta ones.}
 \resizebox{\textwidth}{!}{\input{\PathToOutput/industry_tightness.tex}}
 \end{table}
 
-\paragraph{Silicon Valley Bank case study.} We read one event at three levels ---
-the failed name (SIVB), the regional-bank ETF (KRE), and the financial sector
-(XLF) --- to show the bound responding to the March~2023 stress in real time.
-\pending{SVB case study (SIVB $\to$ KRE $\to$ XLF)}
+\subsection{Silicon Valley Bank: one event at three levels}
+As a final stress test, we run the machinery at \emph{daily} frequency through the
+March~2023 collapse of Silicon Valley Bank, reading one event at three levels: the
+failed name (SIVB), the regional-bank ETF (KRE), and broad financials (XLF). The same
+engine prices each daily surface; nothing else changes. This is the bound at its
+structural weak point --- theory says the lower bound is tight under market
+comonotonicity but conservative for an \emph{idiosyncratic} crash, where the
+risk-neutral probability, carrying no fear premium to remove, is the better estimate.
+SVB is exactly that scenario, with a known resolution: the bank failed, the index did
+not.
+
+Figure~\ref{fig:svb} shows the result, and it reads as a real-time classifier of
+whether the market saw the event as contained or systemic. At the name level, SIVB's
+crash probability is quiet through February, drifts up in early March, and then
+explodes to $36\%$ (risk-neutral) on 9~March --- the last day it traded, after which
+its option surface simply ends, the market having stopped pricing it as a going
+concern. The stress then \emph{decays sharply} across the three levels: the
+regional-bank ETF (KRE) jumps from near zero to a $17.6\%$ peak on 17~March, while
+broad financials (XLF) reach only $6.1\%$. That ordering --- $36\% \to 18\% \to 6\%$
+--- is the market pricing the event as concentrated in the name and its sector rather
+than systemic to the financial system, exactly the classification the theory's three
+levels are meant to separate. Consistent with the idiosyncratic-crash prediction, the
+risk-neutral probability sits above the lower bound throughout the name's collapse;
+for SIVB, the risk-neutral is the measure to watch.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{\PathToOutput/fig_svb_case_study.png}
+\caption{The March~2023 SVB collapse read at three levels, daily: the risk-neutral
+probability (red) and option-implied lower bound (blue) of a 20\% one-month crash for
+SIVB (the failed bank), KRE (regional banks), and XLF (broad financials). SIVB's crash
+probability explodes to $36\%$ on 9~March and its surface then ends as the bank fails;
+the stress decays across the levels ($36\% \to 18\% \to 6\%$), the market pricing the
+event as contained to the name and its sector rather than systemic. For an
+idiosyncratic crash the risk-neutral sits above the (conservative) lower bound, as the
+theory predicts.}
+\label{fig:svb}
+\end{figure}
+
+Because this event has a known resolution, we can check the probabilities against what
+actually happened. Table~\ref{tab:svb} pairs each asset's peak crash probability with
+its realized drawdown from the pre-collapse close (8~March) to the March trough. The
+measure classifies all three levels correctly: the peak probabilities
+($36\% \to 18\% \to 6\%$) rank-order the realized drawdowns
+($-60\% \to -27\% \to -11\%$), and the $20\%$ threshold cleanly separates the two that
+crashed (SIVB, delisted; KRE, $-27\%$) from the one that did not (XLF, $-11\%$). A
+single event is an anecdote, not a calibration, but it is the anecdote the theory
+predicts.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Crash probability vs.\ realized outcome for the SVB episode. ``Peak $P^*$''
+and ``Peak $P^L$'' are the maximum risk-neutral and lower-bound 20\% one-month crash
+probabilities during Feb--Mar 2023; ``Realized drawdown'' is the return from the
+8~March close to the March trough. SIVB was closed by regulators on 10~March and its
+equity effectively wiped, so its $-60\%$ understates the true loss. The peak
+probabilities rank-order the realized drawdowns and the 20\% line separates crash from
+no-crash --- the measure classified the name, its sector, and the system correctly.}
+\label{tab:svb}
+\input{\PathToOutput/svb_realized.tex}
+\end{table}
 
 \paragraph{The \texttt{crashbounds} package.} We package the pipeline as a
 pip-installable library so a reader can call for a name's bounds and fear gap

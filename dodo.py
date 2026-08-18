@@ -433,6 +433,51 @@ def task_industry_compare():
     }
 
 
+def task_pull_svb_daily():
+    """Pull daily OptionMetrics data for the SVB case study (#31): SIVB/KRE/XLF/SPX,
+    Feb-Mar 2023 (surface + spot + zero curve). A small self-contained daily slice."""
+    return {
+        "actions": [
+            "python ./src/settings.py",
+            "python ./src/pull_svb_daily.py",
+        ],
+        "targets": [
+            DATA_DIR / "svb_daily_surface.parquet",
+            DATA_DIR / "svb_daily_spot.parquet",
+            DATA_DIR / "svb_daily_zero.parquet",
+        ],
+        "file_dep": ["./src/settings.py", "./src/pull_svb_daily.py", "./src/schema.py"],
+        "clean": [],
+    }
+
+
+def task_svb_case_study():
+    """X: SVB case study -- daily crash bounds for SIVB/KRE/XLF through the crisis (#31)."""
+    return {
+        "actions": ["python ./src/exhibit_svb.py"],
+        "targets": [
+            OUTPUT_DIR / "svb_daily_bounds.parquet",
+            OUTPUT_DIR / "fig_svb_case_study.png",
+            OUTPUT_DIR / "svb_realized.tex",
+            OUTPUT_DIR / "svb_realized.csv",
+        ],
+        "file_dep": [
+            "./src/exhibit_svb.py",
+            "./src/pull_svb_daily.py",
+            "./src/rates.py",
+            "./src/run_pipeline.py",
+            "./src/rnd.py",
+            "./src/bounds.py",
+            "./src/utility_correction.py",
+            "./src/schema.py",
+            DATA_DIR / "svb_daily_surface.parquet",
+            DATA_DIR / "svb_daily_spot.parquet",
+            DATA_DIR / "svb_daily_zero.parquet",
+        ],
+        "clean": True,
+    }
+
+
 notebook_tasks = {
     "01_data_tour.ipynb.py": {
         "path": "./src/01_data_tour.ipynb.py",
@@ -513,6 +558,8 @@ def task_compile_latex_docs():
             OUTPUT_DIR / "fig_etf_sector_bounds.png",
             OUTPUT_DIR / "industry_tightness.tex",
             OUTPUT_DIR / "fig_industry_compare.png",
+            OUTPUT_DIR / "fig_svb_case_study.png",
+            OUTPUT_DIR / "svb_realized.tex",
         ],
         "clean": True,
     }

@@ -231,6 +231,34 @@ tags = ["sector ETF", "Fama-French", "proxy", "direct measure", "comonotonicity"
 path = "./_output/industry_tightness.csv"
 docs_path = "./docs_src/dataframes/industry_tightness.md"
 
+[dataframes.svb_daily_bounds]
+name = "SVB Case Study — Daily Crash Bounds (extension #31)"
+description = "Daily option-implied crash bounds (lower bound P^L, risk-neutral P*, upper bound P^U) for SIVB, KRE, XLF, and the S&P 500, Feb-Mar 2023, at the four horizons and thresholds. Produced by running the monthly engine (rnd + fear correction + bounds) day by day on the case-study surfaces. SIVB's rows end 2023-03-09, the day it collapsed and last traded as a going concern."
+sources = ["Derived (exhibit_svb.py from daily OptionMetrics vsurfd + secprd + zerocd)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from OptionMetrics via WRDS — subscription required; not redistributable."
+restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit svb_case_study`."
+pull_method = "exhibit_svb.py: daily Appendix-D cleaning (exact-date spot) -> run_pipeline day by day for SIVB/KRE/XLF/SPX"
+tags = ["SVB", "case study", "daily", "regional banks", "contagion", "extension", "KRE", "XLF"]
+path = "./_output/svb_daily_bounds.parquet"
+docs_path = "./docs_src/dataframes/svb_daily_bounds.md"
+
+[dataframes.svb_realized]
+name = "SVB Case Study — Probability vs. Realized (extension #31)"
+description = "The known-resolution table for the SVB episode: each asset's (SIVB, KRE, XLF) peak risk-neutral and lower-bound 20% crash probability during Feb-Mar 2023 against its realized drawdown from the Mar 8 pre-collapse close to the March trough, and whether a 20% crash occurred. The peak probabilities (36/18/6%) rank-order the realized drawdowns (-60/-27/-11%); the 20% line separates crash (SIVB, KRE) from no-crash (XLF)."
+sources = ["Derived (exhibit_svb.py from svb_daily_bounds + daily spot)"]
+providers = ["WRDS"]
+provider_links = ["https://wrds-www.wharton.upenn.edu/"]
+access_types = ["Subscription"]
+license = "Derived from OptionMetrics via WRDS — subscription required; not redistributable."
+restrictions = "Exhibit output; lives in gitignored _output/. Regenerate with `doit svb_case_study`."
+pull_method = "exhibit_svb.py: peak P*/P^L per asset vs realized drawdown (Mar 8 close -> March trough)"
+tags = ["SVB", "case study", "realized", "calibration", "contained", "extension"]
+path = "./_output/svb_realized.csv"
+docs_path = "./docs_src/dataframes/svb_realized.md"
+
 
 [charts]
 
@@ -275,4 +303,11 @@ description = "The paper's average-of-constituents proxy (orange) vs. our direct
 dataframe = "results"
 path = "./_output/fig_industry_compare.png"
 docs_path = "./docs_src/charts/fig_industry_compare.md"
+
+[charts.fig_svb_case_study]
+name = "SVB Case Study — Daily Crash Bounds at Three Levels (extension #31)"
+description = "The March 2023 Silicon Valley Bank collapse read daily at three levels: risk-neutral probability (red) and option-implied lower bound (blue) of a 20% one-month crash for SIVB (the failed bank), KRE (regional banks), and XLF (broad financials), Feb-Mar 2023. SIVB's crash probability explodes to 36% on Mar 9 and its surface then ends as the bank fails; the stress decays across the levels (36% to 18% to 6%), the market pricing the event as contained to the name and its sector rather than systemic."
+dataframe = "svb_daily_bounds"
+path = "./_output/fig_svb_case_study.png"
+docs_path = "./docs_src/charts/fig_svb_case_study.md"
 
