@@ -9,25 +9,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
-    - name: Cache Python environment
-      id: cache-python-env
-      uses: actions/cache@v3
-      with:
-        path: .venv
-        key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt', '**/.python-version', 'crashbounds/pyproject.toml') }}
-        restore-keys: |
-          ${{ runner.os }}-venv-
-    - name: Install Python environment
-      if: steps.cache-python-env.outputs.cache-hit != 'true'
+        cache: 'pip'
+    - name: Install dependencies
       run: |
-        python -m venv .venv
-        source .venv/bin/activate
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -e crashbounds/
     - name: Test with pytest
-      run: |
-        source .venv/bin/activate
-        pytest
+      run: pytest
