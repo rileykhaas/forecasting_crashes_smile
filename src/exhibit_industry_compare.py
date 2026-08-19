@@ -234,20 +234,32 @@ def build_figure_compare(
     )
     matched = _matched_sectors(etf_secid_map)
 
+    # Precompute each sector's direct series and a common y-top, so every panel shares
+    # the same y-axis (comparable at a glance).
+    directs = {
+        (sector, ticker): _etf_series(
+            results, etf_secid_map, ticker, threshold_q, horizon, start, end
+        )
+        for sector, ticker in matched
+    }
+    ymax = max(
+        ([float(proxy["proxy_lower"].max())] if len(proxy) else [0.0])
+        + [float(d["bound_lower"].max()) for d in directs.values() if len(d)]
+    )
+    ytop = ymax * 1.05
+
     n = len(matched)
     ncol = 3
     nrow = (n + ncol - 1) // ncol
     fig, axes = plt.subplots(
-        nrow, ncol, figsize=(14, 2.9 * nrow), sharex=True, squeeze=False
+        nrow, ncol, figsize=(14, 2.9 * nrow), sharex=True, sharey=True, squeeze=False
     )
     fig.subplots_adjust(
         left=0.06, right=0.99, top=0.93, bottom=0.05, hspace=0.34, wspace=0.16
     )
     for ax, (sector, ticker) in zip([a for row in axes for a in row], matched):
         p = proxy[proxy["sector"] == sector]
-        d = _etf_series(
-            results, etf_secid_map, ticker, threshold_q, horizon, start, end
-        )
+        d = directs[(sector, ticker)]
         ax.plot(
             p["date"],
             p["proxy_lower"],
@@ -259,7 +271,7 @@ def build_figure_compare(
             d["date"], d["bound_lower"], color=C_DIRECT, lw=1.2, label="Direct (ETF)"
         )
         ax.set_xlim(start, end)
-        ax.set_ylim(bottom=0)
+        ax.set_ylim(0, ytop)
         mark = "" if sector in CLEAN_SECTORS else " *"
         ax.set_title(f"{sector}{mark} — {ticker}", fontsize=9.5, pad=4)
         _style(ax)
