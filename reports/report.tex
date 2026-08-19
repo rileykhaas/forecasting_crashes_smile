@@ -61,13 +61,13 @@ Forecasting Crashes with a Smile\\
 \begin{abstract}
 We replicate Martin \& Shi (2025), which shows that the shape of the
 option-implied volatility smile carries a model-free signal for the physical
-probability that a stock crashes. From index and single-name options we recover
+probability that a stock crashes. From index and single-name options, we recover
 risk-neutral return distributions, apply a power-utility fear correction, and
 form Fr\'echet--Hoeffding bounds on the crash probability; the lower bound is
 predicted to approximately equal the truth. Over the paper's 1996--2022 sample we
 reproduce Table~1 to within a tight tolerance: the lower bound tracks the realized
 crash frequency while the risk-neutral probability and the upper bound overstate
-crash risk. We then extend every exhibit through 2025 and add sector-level crash
+crash risk. We then extend every exhibit through 2024 and add sector-level crash
 series and a Silicon Valley Bank case study. The full analysis regenerates
 end-to-end from WRDS via a single \texttt{doit} command.
 \end{abstract}
@@ -104,18 +104,18 @@ The core replication succeeds, and it is fully reproducible.
   \item \textbf{The central result reproduces.} Our summary-statistics table
     (Table~\ref{tab:table1}) matches the paper's cross-section to within $0.007$:
     the lower bound hugs the realized crash frequency while the risk-neutral
-    probability and (more so) the upper bound overstate crashes --- exactly the
+    probability and (more so) the upper bound overstate crashes, exactly the
     pattern the theory predicts. The calibration regressions
     (Table~\ref{tab:table2}) recover the lower bound's slope of $\beta \approx 1$
     against a miscalibrated risk-neutral probability.
-  \item \textbf{One command, end to end.} The entire pipeline --- WRDS pulls,
-    cleaning, estimation, every figure and table, the notebook, and this report ---
+  \item \textbf{One command, end to end.} The entire pipeline, WRDS pulls,
+    cleaning, estimation, every figure and table, the notebook, and this report
     regenerates from a clean checkout with a single \texttt{doit} run, and every
     replicated number is pinned to the paper by a tolerance unit test (142 tests in
-    all).
+    all, 152 tests including the package).
   \item \textbf{The result survives out of sample.} Extending every exhibit through
-    2025 (Section~\ref{sec:extension2025}) leaves the pattern intact: the
-    summary statistics move by at most $0.005$ and the lower bound's forecasting
+    2024 (Section~\ref{sec:extension2025}) leaves the pattern intact: the
+    summary statistics move by at most $0.007$ and the lower bound's forecasting
     edge holds through the COVID aftermath, the 2022 drawdown, and the March-2023
     bank stress.
   \item \textbf{The extensions work.} Pricing the eleven sector ETFs directly
@@ -139,12 +139,28 @@ The harder problems were practical and numerical rather than conceptual.
     restructured to stream one day at a time.
   \item \textbf{Data gaps.} OptionMetrics is missing the July~2020 surface snapshot
     entirely, which we handle by falling back to that month's last valid trading day.
+  \item \textbf{Membership freeze.} The S\&P~500 \emph{constituent} list in our CRSP
+    vintage ends December~2024, while the OptionMetrics surface runs to August~2025.
+    Rather than drop the most recent months, we carry the last known membership
+    forward (the documented \texttt{carried\_forward} freeze), which keeps the
+    single-name surfaces populated to the option data's last date and affects only
+    the eight 2025 formation months (January--August~2025).
+  \item \textbf{Extension frontier.} The \emph{bounds} themselves nonetheless stop at
+    year-end~2024, not August~2025: every constituent bound is priced against the
+    market (SPX) CDF, whose spot is the CRSP S\&P~500 index level (\texttt{spindx}),
+    and that too ends December~2024. We keep CRSP rather than push further for
+    \emph{data consistency} with the paper --- moneyness ($K/S$) and the
+    realized-crash outcome are defined on a single CRSP source, so the estimator
+    never mixes datasets across the sample. Reaching the surface frontier would mean
+    sourcing the index spot from OptionMetrics (\texttt{secprd}), as our SVB study
+    already does; we flag it as documented future work over a calm eight-month
+    window (January--August~2025) that changes no conclusion.
   \item \textbf{Universe differences.} Our CRSP membership vintage yields a modestly
     larger firm set than the paper's, a difference we document rather than force.
   \item \textbf{Classification fidelity.} Matching the paper's industry analysis
     required the full Fama--French 49-industry scheme (its Figure~10), and rolling
     those industries up to the eleven tradable sector ETFs is only unambiguous for
-    five of them --- a mapping we make explicit rather than paper over
+    five of them, a mapping we make explicit rather than paper over
     (Section~\ref{sec:extensions}).
 \end{itemize}
 
@@ -153,8 +169,8 @@ The harder problems were practical and numerical rather than conceptual.
 %======================================================================
 All raw data comes from WRDS and regenerates from scratch via \texttt{doit}; the
 proprietary pulls cache locally and are never committed. The sample follows the
-paper --- S\&P~500 index members observed on the last trading day of each month,
-January 1996 through December 2022 --- and our extension carries the panel to the
+paper: S\&P~500 index members observed on the last trading day of each month,
+January 1996 through December 2022, and our extension carries the panel to the
 most recent available data.
 
 \begin{itemize}
@@ -202,7 +218,7 @@ estimate through five steps:
     Fr\'echet--Hoeffding bounds; the comonotone \emph{lower bound} is the
     forecaster.
   \item \emph{Calibration test.} Regress the realized crash indicator on each
-    probability --- the theory predicts a slope of one for the lower bound, not zero.
+    probability. The theory predicts a slope of one for the lower bound.
 \end{enumerate}
 
 We follow the paper's Appendix~D throughout: a fine grid $K/S \in [1/L, L]$
@@ -215,8 +231,8 @@ documented dataframe.
 The extensions reuse this same five-step engine without modification. The sector
 ETFs are priced exactly like any name, so their bounds are directly comparable to
 the single-name results. For the industry comparison we assign each S\&P~500
-constituent to a Fama--French 49 industry from its CRSP SIC code --- the
-classification the paper uses for its Figure~10 --- and roll those industries up to
+constituent to a Fama--French 49 industry from its CRSP SIC code, the
+classification the paper uses for its Figure~10, and roll those industries up to
 the sector ETFs they compose; only five of the eleven sectors map unambiguously, a
 caveat we carry through the exhibit. The SVB case study runs the identical engine at
 daily frequency over a fixed two-month window. Nothing about the estimator changes
@@ -263,7 +279,7 @@ Result~3, computed from index options alone.
 \includegraphics[width=\linewidth]{\PathToOutput/fig2_median_bounds_market.png}
 \caption[Market vs.\ cross-section bounds]{\textbf{Reproduces Martin \& Shi Figure
 2.} The market crash probability is consistently lower and smoother than the typical
-constituent's --- the diversified index is less crash-prone than the stocks that
+constituent's. The diversified index is less crash-prone than the stocks that
 compose it.}
 \label{fig:fig2}
 \end{figure}
@@ -289,7 +305,7 @@ the number of formation months, $N$ the number of firms.}
 \footnotesize
 \caption[Calibration regressions]{\textbf{Reproduces Martin \& Shi Table 2.} The
 lower bound calibrates at $\beta \approx 1$, while the risk-neutral probability and
-the upper bound are badly miscalibrated (slopes well below one) --- the formal
+the upper bound are badly miscalibrated (slopes well below one), the formal
 counterpart of Table~\ref{tab:table1}. Two-way clustered standard errors (Thompson
 2011) in parentheses; block-bootstrap standard errors (Martin \& Wagner 2019, 2500
 samples) in brackets.}
@@ -299,11 +315,11 @@ samples) in brackets.}
 \exhibitbreak
 
 %======================================================================
-\section{Extension Through 2025}
+\section{Extension Through 2024}
 \label{sec:extension2025}
 %======================================================================
 We recompute every replicated exhibit over the sample extended past the paper's
-December~2022 cutoff --- the first out-of-sample test of whether the pattern
+December~2022 cutoff, the first out-of-sample test of whether the pattern
 survives. The genuinely new period is 2023 onward; its one notable crash event is
 the March-2023 regional-bank stress (SVB and peers), while markets were otherwise
 calm. Index membership past the CRSP vintage (2024-12) is held forward (the
@@ -314,7 +330,7 @@ continue the R-series, each the extended-sample twin of its replication counterp
 \begin{leadin}
 Figure~\ref{fig:fig1ext} carries the single-name bounds (Figure~\ref{fig:fig1})
 through the extended sample. \textbf{What the new dates show:} the post-2022 period is
-calm for both names --- the one-month, $20\%$-crash upper bound peaks at only $2.9\%$
+calm for both names: the one-month, $20\%$-crash upper bound peaks at only $2.9\%$
 for Apple (January 2023) and $2.1\%$ for AIG (May 2023, around the bank stress), an
 order of magnitude below their 2008 and 2020 crisis readings. No new crisis-scale
 spike appears, and the bounds behave out of sample exactly as they did within it.
@@ -333,7 +349,7 @@ spikes fall inside the paper's own window; the genuinely new post-2022 tail is q
 \begin{leadin}
 Figure~\ref{fig:fig2ext} carries the cross-sectional bounds (Figure~\ref{fig:fig2})
 through the extended sample. \textbf{What the new dates show:} the aggregate picture
-is likewise quiet --- the cross-sectional median one-month upper bound stays below
+is likewise quiet: the cross-sectional median one-month upper bound stays below
 $1\%$ through 2023--2024, with the March-2023 bank stress a small, localized bump
 rather than a broad spike. The market-below-constituents ordering persists.
 \end{leadin}
@@ -354,9 +370,9 @@ the replication.}
 \footnotesize
 \caption[Summary statistics, extended]{\textbf{Reproduces Martin \& Shi Table 1,
 extended sample.} The lower bound continues to sit next to the realized crash
-frequency, while the risk-neutral probability and the upper bound still overstate ---
-the replication's pattern is unchanged. Adding the post-2022 data moves every cell by
-at most $0.005$ (at $20\%$/12-month, across firms: realized $0.157\!\to\!0.153$, lower
+frequency, while the risk-neutral probability and the upper bound still overstate.
+The replication's pattern is unchanged. Adding the post-2022 data moves every cell by
+at most $0.007$ (at $20\%$/12-month, across firms: realized $0.156\!\to\!0.153$, lower
 bound $0.121\!\to\!0.120$).}
 \label{tab:table1ext}
 \input{\PathToOutput/table1_ext.tex}
@@ -371,7 +387,7 @@ bound $0.121\!\to\!0.120$).}
 extended sample.} The lower bound's $\beta \approx 1$ calibration survives, while the
 risk-neutral probability and the upper bound remain miscalibrated. Two mostly-quiet
 extra years barely move the estimates (at $20\%$/12-month the lower bound goes
-$1.13\!\to\!1.15$).}
+$1.12\!\to\!1.14$).}
 \label{tab:table2ext}
 \resizebox{\textwidth}{!}{\input{\PathToOutput/table2_ext.tex}}
 \end{table}
@@ -379,66 +395,35 @@ $1.13\!\to\!1.15$).}
 
 \subsection{Out-of-sample forecasting performance (reproduces Martin \& Shi Figure 6)}
 \begin{leadin}
-Figure~\ref{fig:fig6ext} is our replication of the paper's Figure~6, carried through
-the extended sample. Each line is a \emph{running} out-of-sample $R^2$ --- a
-cumulative score of a forecaster against a naive benchmark, each firm's own
-historical crash rate --- so any line above zero is beating that benchmark. The four
-columns are the same $20\%$ crash measured $1$, $3$, $6$, and $12$ months ahead.
-
-The pink line is our lower bound, computed with no fitting ($\alpha = 0$,
-$\beta = 1$). The blue lines are the risk-neutral probability, which is known to run
-too high: the paper corrects it \emph{statistically}, regressing realized crashes on
-it over a trailing window each period (the calibration regression of
-Table~\ref{tab:table2}) and using the fitted slope and intercept to rescale it going
-forward. The two rows are the two versions of that correction --- an expanding window
-(Panel~A) and a three-year rolling window (Panel~B).
+Figure~\ref{fig:fig6ext} replicates the paper's Figure~6 through the extended sample.
+Each line is a \emph{running} out-of-sample $R^2$, a cumulative score against a naive
+benchmark (each firm's own historical crash rate), so any line above zero beats it; the
+four columns are the $20\%$ crash at $1$, $3$, $6$, and $12$ months. The pink line is
+our lower bound (no fitting, $\alpha=0$, $\beta=1$); the blue lines are the risk-neutral
+probability corrected statistically over a trailing window (the
+Table~\ref{tab:table2} calibration), in an expanding window (Panel~A) and a three-year
+rolling window (Panel~B). At the paper's 2022 cutoff the lines had drifted
+down for a decade, leaving a calm market and a genuinely eroding edge
+indistinguishable; the fresh out-of-sample data past that cutoff, whose one notable
+stress is the March-2023 regional-bank episode, tells the two apart.
 \end{leadin}
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{\PathToOutput/fig6_oos_r2_ext.png}
 \caption[Out-of-sample $R^2$, extended]{\textbf{Reproduces Martin \& Shi Figure 6,
 extended sample.} Out-of-sample $R^2$. The lower bound (pink) is highest at every
-horizon and stays above zero for more than twenty years, while the adjusted
-risk-neutral forecast (dark) declines and, at the $6$- and $12$-month horizons, falls
-below zero after 2008--2010.}
+horizon and stays above zero for over twenty years despite carrying no free
+parameters, while the statistically-adjusted risk-neutral (dark) falls \emph{below}
+zero at the $6$- and $12$-month horizons after 2008 (worse than a firm's own
+historical average) because its trailing window stays calibrated to the crisis and
+cries wolf through the recovery, whereas the bound has no window to lag. That contrast
+is the paper's central lesson. \textbf{The edge holds out of sample:} across the
+post-2022 data the cumulative $R^2$ barely moves ($12$-month $12.9\%\!\to\!12.7\%$) and
+the ranking is untouched, the benign reading, so the measure survived the events
+that came after the study.}
 \label{fig:fig6ext}
 \end{figure}
 \exhibitbreak
-
-\noindent\textbf{What the figure shows.} The lower bound is on top at every horizon
-and stays above zero throughout, despite carrying no free parameters. The adjusted
-risk-neutral does worse and, in the bottom-right panels, falls \emph{below} zero after
-2008 --- the statistical fix does not merely underperform the bound, it underperforms
-a firm's own historical average. The mechanism is a lag: the three-year window stays
-calibrated to the crisis for three years after it ends, so it keeps trusting the
-pessimistic risk-neutral number and cries wolf through the entire recovery. The lower
-bound has nothing to lag --- it carries no window and no fitted coefficients, and
-simply re-reads current option prices each month and re-prices. That contrast, between
-a statistical correction anchored to a trailing window and a theory-based measure that
-responds to live prices, is the central lesson of the paper.
-
-\noindent\textbf{What the extension tests.} At the end of the paper's window every
-line has been drifting down for about a decade. Two readings fit: the post-2012 market
-was simply calm, with few crashes on which a forecaster could prove itself; or the
-edge is genuinely eroding. The paper's data ends before the two can be told apart.
-Carrying the sample through 2025 separates them, because it reintroduces real crash
-events (the COVID aftermath, the 2022 drawdown, and the March-2023 bank stress). The
-score is informative here by construction: a cumulative out-of-sample $R^2$ rises only
-when a forecaster does better on the newly added data than it did on the past, so the
-direction each line moves as the sample extends is a direct readout of whether the
-edge is holding.
-
-\noindent\textbf{What the new dates show.} The lower bound's edge holds. Across the
-post-2022 data its cumulative $R^2$ moves by at most half a percentage point at any
-horizon --- the $12$-month score edges from $13.2\%$ to $12.7\%$, the $6$-month from
-$8.9\%$ to $8.6\%$ --- and the ranking is untouched: the lower bound stays on top and
-above zero at every horizon, while the rolling-window risk-neutral stays below zero at
-$6$ and $12$ months. Because the statistic is cumulative over a $27$-year base, two
-mostly-quiet years cannot move it far by construction; what matters is that the path
-is flat rather than turning down again. The bound forecast crashes over 2023--2024
-about as well as it had over its whole history --- the benign reading, not the
-erosion one --- which is the due-diligence result anyone relying on the paper needs:
-the measure survived the events that came after the study.
 
 %======================================================================
 \section{Summary Statistics of the Underlying Data}
@@ -446,16 +431,15 @@ the measure survived the events that came after the study.
 %======================================================================
 \useEexhibits
 \noindent\small Beyond the replicated exhibits, we profile the \emph{raw inputs} the
-bounds are built from --- the coverage of the option surface and the distribution of
-realized returns, over exactly the S\&P~500 constituent member-months the replication
-runs on (distinct from Table~\ref{tab:table1}, which reports statistics on the
-\emph{derived} bounds). Table~\ref{tab:eda} tabulates coverage year by year: the panel
-is broad and stable ($\sim\!500$ names, $\sim\!120$--$133$ quotes per firm-month), and
-the last column --- the realized 12-month 20\% crash frequency --- is the low but
-strongly time-varying object being forecast.\normalsize
+bounds are built from --- the option-surface coverage and the realized-return
+distribution, over exactly the S\&P~500 member-months the replication runs on (distinct
+from Table~\ref{tab:table1}, which reports statistics on the \emph{derived}
+bounds).\normalsize
+
+\subsection{Per-year coverage}
 \begin{table}[H]
 \centering
-\footnotesize
+\scriptsize
 \caption[Per-year panel coverage]{\textbf{Our own exhibit.} Per-year coverage of the
 underlying option/return panel (S\&P~500 constituent member-months, 1996--2022).
 Coverage is broad ($\sim\!500$ names) and continuous, at a stable quote density;
@@ -469,12 +453,12 @@ hard to predict.}
 \end{table}
 \exhibitbreak
 
-\subsection*{The option/return panel at a glance}
+\subsection{The option/return panel at a glance}
 \begin{leadin}
 Figure~\ref{fig:eda} reads the same panel four ways: the count of covered names over
 time, where quotes actually sit on the moneyness $\times$ maturity grid, the
 implied-volatility ``smile'' by maturity, and the realized gross-return distribution as
-the horizon lengthens --- the mass crossing the crash lines is what the bounds forecast.
+the horizon lengthens, the mass crossing the crash lines is what the bounds forecast.
 \end{leadin}
 \begin{figure}[H]
 \centering
@@ -485,52 +469,40 @@ underlying option/return panel at a glance (S\&P~500 constituent member-months,
 month is stable near $500$, dipping only briefly in March 2020. \textbf{(b)} Quote
 availability across the moneyness $\times$ maturity grid: the
 downside-put tail that the lower bound integrates is well covered, more so at longer
-maturities. \textbf{(c)} The implied-volatility smile by maturity --- the downside
+maturities. \textbf{(c)} The implied-volatility smile by maturity, the downside
 skew the bound reads as crash risk. \textbf{(d)} The realized gross-return
 distribution develops a fat left tail as the horizon grows, placing real mass beyond
 the 20\% and 30\% crash thresholds. Together they show the inputs are well-populated
 exactly where the method needs them, and that crashes are rare but non-trivial.}
 \label{fig:eda}
 \end{figure}
-\exhibitbreak
 
 %======================================================================
 \section{Extensions}
 \label{sec:extensions}
 %======================================================================
 \subsection{Sector crash series}
-\begin{leadin}
-Priced by the same engine, the eleven Select Sector SPDR ETFs (plus KRE) give each
-sector's crash probability \emph{directly} rather than as an average of constituents
---- a clean test, since comonotonicity is far more plausible for a diversified ETF than
-for a single name. The measure behaves as intuition demands: technology spikes in
-2000--02, financials and regional banks in 2008--09, energy in 2014--16, while
-defensive sectors stay quiet and below the index.
-\end{leadin}
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{\PathToOutput/fig_etf_sector_bounds.png}
 \caption[Direct sector-ETF crash bounds]{\textbf{Our own exhibit.} Direct sector-ETF
-lower-bound probability of a 20\% one-month crash (blue), each against the S\&P~500
-index's own crash probability (grey, the $i=m$ bound), 1996--2022. Each sector's
-option surface prices its \emph{own} crash risk directly, rather than averaging its
-constituents: technology leads in 2000--02, financials and regional banks in
-2008--09, energy in 2014--16, while defensive sectors stay below the index throughout.
-The takeaway: the theory-based measure produces an economically coherent,
-sector-specific crash gauge, tightest where the market-comonotonicity assumption is
-most plausible.}
+lower-bound probability of a 20\% one-month crash (blue) vs.\ the S\&P~500's own (grey,
+the $i=m$ bound), 1996--2022. Each sector's surface prices its \emph{own} crash risk
+directly rather than averaging constituents, giving an economically coherent,
+sector-specific gauge (technology in 2000--02, financials in 2008--09, energy in
+2014--16), tightest where market comonotonicity is most plausible.}
 \label{fig:etf}
 \end{figure}
 \exhibitbreak
 
-\subsection*{Sector bounds against realized}
+\subsection{Sector bounds against realized}
 \begin{leadin}
 Table~\ref{tab:etf} states the benchmark numerically: for the diversified broad
 sectors the mean lower bound sits close to the realized crash frequency (financials
 $0.079$ vs.\ $0.073$; the index itself $0.055$ vs.\ $0.068$), while the risk-neutral
-probability again runs two to three times too high --- the paper's ``crying wolf''
-result, now confirmed at the sector level. The bound is more conservative for the
-less-diversified, higher-beta sleeves (energy, technology, and especially regional
+probability again runs two to three times too high, the paper's ``crying wolf''
+result now confirmed at the sector level. The bound is more conservative for the
+less-diversified, sector-driven sleeves (energy, technology, and especially regional
 banks), consistent with comonotonicity binding tightest exactly where diversification
 is greatest.
 \end{leadin}
@@ -545,7 +517,7 @@ frequency of a 20\% crash; $N$ counts the months with an observed outcome (short
 the later-launched ETFs, XLRE and XLC). The takeaway: for the diversified broad
 sectors the lower bound hugs the realized frequency while the risk-neutral overstates
 it two- to three-fold, reproducing the paper's core finding directly at the sector
-level; the bound is more conservative for the concentrated, higher-beta sleeves.}
+level; the bound is more conservative for the concentrated, sector-driven sleeves.}
 \label{tab:etf}
 \input{\PathToOutput/etf_bounds.tex}
 \end{table}
@@ -569,26 +541,27 @@ one-year 20\% crash, 1996--2022, for all eleven SPDR sectors. Each constituent i
 assigned its FF49 industry (the paper's Figure-10 classification) and rolled up to its
 SPDR sector; five map cleanly and the other six (asterisked) are best-fit
 approximations, with REITs routed to Real Estate. The proxy lies above the direct
-measure in every panel --- averaging individually risky names overstates the
+measure in every panel, averaging individually risky names overstates the
 diversified sector's crash risk; health care and real estate are the clearest cases.}
 \label{fig:industrycompare}
 \end{figure}
 \exhibitbreak
 
-\subsection*{How tight is each measure?}
+\subsection{How tight is each measure?}
 \begin{leadin}
 The pattern is consistent: the proxy (orange) sits \emph{above} the direct bound
 (blue) in every sector and at almost every date. Table~\ref{tab:industry} measures each
 against the sector's realized crash frequency. The proxy overstates it in every sector
 but one (the Proxy$-$Real.\ column is positive throughout, by up to nine or ten
 points). The direct measure is far better calibrated for the broad, well-diversified
-sectors --- essentially on top of realized for financials ($+0.007$) and industrials
+sectors, essentially on top of realized for financials ($+0.007$) and industrials
 ($+0.000$), and starkest in health care and real estate, where individually risky
 biotech names and single REITs keep the proxy above $0.11$ against a direct bound less
-than half that. For the higher-beta sleeves (energy, technology, utilities) the direct
-bound sits \emph{below} the realized frequency: as a \emph{lower} bound it stays
-conservative where crashes are idiosyncratic (oil, rates, the tech cycle) rather than
-market-driven. The lone exception is communication services, whose XLC realized column
+than half that. For energy, technology, and utilities the direct bound sits
+\emph{below} the realized frequency: each has its own crash trigger (oil, the tech
+cycle, rates) that fires independently of a broad market crash, so the comonotonicity
+that makes the bound tight is weakest there and the bound stays conservative exactly as
+a \emph{lower} bound should. The lone exception is communication services, whose XLC realized column
 is inflated by a short, crash-heavy post-2018 sample (the ETF launched in 2018, as did
 XLRE); read those two realized figures with that caveat. In every case, though, the
 direct measure is the sector's own crash probability; the proxy is not.
@@ -606,7 +579,7 @@ measure's gap to it (its tightness). An asterisk marks the six sectors whose
 FF49$\to$GICS mapping is a best-fit approximation. The takeaway: the proxy overstates
 the realized frequency in every sector (bar the short-sample XLC), while the direct
 measure tracks it for the broad diversified sectors and stays conservative (below) for
-the higher-beta ones.}
+the sector-driven ones.}
 \label{tab:industry}
 \resizebox{\textwidth}{!}{\input{\PathToOutput/industry_tightness.tex}}
 \end{table}
@@ -615,7 +588,7 @@ the higher-beta ones.}
 \subsection{Silicon Valley Bank: one event at three levels}
 \begin{leadin}
 As a final stress test, we run the same engine at \emph{daily} frequency through the
-March~2023 collapse of Silicon Valley Bank, reading one event at three levels --- the
+March~2023 collapse of Silicon Valley Bank, reading one event at three levels, the
 failed name (SIVB), the regional-bank ETF (KRE), and broad financials (XLF). This is
 the bound at its structural weak point: theory says it is conservative for an
 \emph{idiosyncratic} crash, where the risk-neutral probability is the better estimate.
@@ -636,7 +609,7 @@ sits above the (conservative) lower bound, as the theory predicts.}
 \end{figure}
 \exhibitbreak
 
-\subsection*{Checking the calls against the outcome}
+\subsection{Checking the calls against the outcome}
 \begin{leadin}
 Because this event has a known resolution, we can check the probabilities against what
 actually happened. Table~\ref{tab:svb} pairs each asset's peak crash probability with
@@ -657,7 +630,7 @@ maximum risk-neutral and lower-bound 20\% one-month crash probabilities during
 Feb--Mar 2023; ``Realized drawdown'' is the return from the 8~March close to the March
 trough. SIVB was closed by regulators on 10~March and its equity effectively wiped, so
 its $-60\%$ understates the true loss. The peak probabilities rank-order the realized
-drawdowns and the 20\% line separates crash from no-crash --- the measure classified
+drawdowns and the 20\% line separates crash from no-crash. The measure classified
 the name, its sector, and the system correctly.}
 \label{tab:svb}
 \input{\PathToOutput/svb_realized.tex}
@@ -674,28 +647,26 @@ directly.
 The replication confirms the paper's central claim on our independently
 constructed panel: the option-implied lower bound is a well-calibrated forecast of
 crash risk, materially tighter than the risk-neutral probability it corrects. The
-main frictions were engineering and data-quality issues --- numerical consistency
-between the two representations of the risk-neutral distribution, the memory cost
-of the full cross-section, an OptionMetrics data gap, and membership-vintage
-differences --- each of which we resolved or documented explicitly. The low
-regression $R^2$ (a few percent) is expected: crashes are rare binary events, and
-the meaningful comparison is the lower bound against the risk-neutral probability
-on the same sample, where the bound wins.
+main frictions were engineering and data-quality issues, each of which we resolved 
+or documented explicitly. The low regression $R^2$ (a few percent) is expected: crashes 
+are rare binary events, and the meaningful comparison is the lower bound against the 
+risk-neutral probability on the same sample, where the bound wins.
 
 Our sector-ETF extension carries the method beyond the paper and sharpens its
 economic point. Pricing the eleven Select Sector SPDR surfaces (plus KRE) directly
-gives an honest per-sector crash gauge that spikes exactly when it should ---
+gives an honest per-sector crash gauge that spikes exactly when it should:
 technology in 2000--02, financials and regional banks in 2008--09, energy in
-2014--16 --- and confirms the ``crying wolf'' result at the sector level, with the
+2014--16, and confirms the ``crying wolf'' result at the sector level, with the
 risk-neutral probability running two- to three-fold above realized while the lower
 bound stays close. The comparison in Table~\ref{tab:industry} is the clearest payoff:
 the paper's average-of-constituents proxy overstates the realized sector crash
-frequency in \emph{every} sector (by up to nine percentage points), because an
+frequency in \emph{every} sector but one (by up to nine percentage points), because an
 average of individually risky names is not the probability the diversified sector
-crashes. Our direct measure supplies that probability --- landing on top of the
+crashes. Our direct measure supplies that probability, landing on top of the
 realized frequency for the broad diversified sectors (financials $0.079$ vs.\ $0.073$;
 industrials $0.067$ vs.\ $0.066$) and staying conservative, as a lower bound should,
-for the higher-beta sleeves whose crashes are idiosyncratic rather than market-driven.
+for the sectors whose crashes are sector-specific (oil, the tech cycle, rates) rather
+than market-driven.
 
 \clearpage
 %======================================================================

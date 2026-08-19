@@ -199,7 +199,9 @@ def build_figure_etf(
     end=REPL_END,
     title=FIG_TITLE,
 ):
-    """3x4 small-multiple figure: each sector ETF's lower bound + the SPX benchmark."""
+    """2-wide x 6-tall small-multiple figure: each sector ETF's lower bound + the SPX
+    benchmark. The portrait 6x2 layout gives each panel roughly twice the width of a
+    4-across grid, so the time series is legible."""
     spx = _series(results, schema.SPX_SECID, threshold_q, horizon, start, end)
     tickers = [t for t in GRID_ORDER if t in set(secid_map["ticker"])]
 
@@ -214,9 +216,9 @@ def build_figure_etf(
             ymax = max(ymax, float(s["bound_lower"].max()))
     ytop = ymax * 1.08
 
-    fig, axes = plt.subplots(3, 4, figsize=(15, 8.5), sharex=True, sharey=True)
+    fig, axes = plt.subplots(6, 2, figsize=(11, 10.2), sharex=True, sharey=True)
     fig.subplots_adjust(
-        left=0.05, right=0.99, top=0.90, bottom=0.06, hspace=0.30, wspace=0.12
+        left=0.08, right=0.985, top=0.955, bottom=0.05, hspace=0.34, wspace=0.11
     )
     for ax, t in zip(axes.flat, tickers):
         s = per[t]
@@ -234,8 +236,8 @@ def build_figure_etf(
         ax.set_visible(False)
 
     axes.flat[0].legend(frameon=False, fontsize=8, loc="upper right")
-    fig.suptitle(title, fontsize=13, y=0.965)
-    fig.supylabel("Lower-bound probability of a 20% crash", fontsize=10, x=0.015)
+    fig.suptitle(title, fontsize=13, y=0.978)
+    fig.supylabel("Lower-bound probability of a 20% crash", fontsize=10, x=0.02)
     return fig
 
 
