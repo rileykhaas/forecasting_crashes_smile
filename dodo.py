@@ -569,10 +569,13 @@ def task_compile_latex_docs():
             OUTPUT_DIR / "fig6_oos_r2_ext.png",
             OUTPUT_DIR / "eda_coverage.tex",
             OUTPUT_DIR / "eda_panel.png",
-            OUTPUT_DIR / "etf_bounds.tex",
-            OUTPUT_DIR / "fig_etf_sector_bounds.png",
-            OUTPUT_DIR / "industry_tightness.tex",
-            OUTPUT_DIR / "fig_industry_compare.png",
+            # The sector-ETF extension exhibits are shown on the extended sample
+            # (1996-2024), not the paper's replication window -- they are our own
+            # work, not a replication claim, so report.tex \input's the _ext files.
+            OUTPUT_DIR / "etf_bounds_ext.tex",
+            OUTPUT_DIR / "fig_etf_sector_bounds_ext.png",
+            OUTPUT_DIR / "industry_tightness_ext.tex",
+            OUTPUT_DIR / "fig_industry_compare_ext.png",
             OUTPUT_DIR / "fig_svb_case_study.png",
             OUTPUT_DIR / "svb_realized.tex",
         ],
